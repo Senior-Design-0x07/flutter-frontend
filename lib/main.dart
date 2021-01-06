@@ -1,65 +1,75 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Hobby Hub',
+    return MaterialApp(debugShowCheckedModeBanner: false,
+      title: 'Get Request',
       theme: ThemeData(
         primarySwatch: Colors.green,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(title: 'Hobby Hub Starting Project'),
+      home: HomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-  final String title;
-
+class HomePage extends StatefulWidget {
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _HomePageState extends State<HomePage> {
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
+  String greetings = '';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
+          title: Text('Hobby Hub UI'),
+        ),
+      //All this was written by a guy on YouTube xD
+      body: Container(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Text(greetings, //Text that will be displayed on the screen
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            Center( 
+              child: Container( //container that contains the button 
+                width: 150,    
+                height: 60,
+                child: RaisedButton(
+                  color: Colors.blue,
+                  onPressed: () async { //async function to perform http get
+
+                  final response = await http.get('http://192.168.0.66:5000/api/Hello'); //getting the response from our backend server script
+
+                  final decoded = json.decode(response.body) as Map<String, dynamic>; //converting it from json to key value pair 
+
+                  setState(() {
+                    greetings = decoded['greetings']; //changing the state of our widget on data update
+                  });
+
+                  },
+                  child: Text( 
+                    'Press',
+                    style: TextStyle(fontSize: 24,),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ),
     );
   }
 }
+
