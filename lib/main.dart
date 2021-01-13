@@ -50,7 +50,7 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.blue,
                   onPressed: () async { //async function to perform http get
 
-                  final response = await http.get('http://192.168.0.66:5000/api/Hello'); //getting the response from our backend server script
+                  final response = await http.get('http://192.168.7.2:5000/api/Hello'); //getting the response from our backend server script
 
                   final decoded = json.decode(response.body) as Map<String, dynamic>; //converting it from json to key value pair 
 
