@@ -1,75 +1,49 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:hobby_hub_ui/example/example_page.dart';
+import 'package:hobby_hub_ui/http/http_service.dart';
+import 'package:hobby_hub_ui/models/example.dart';
 
-void main() {
-  runApp(MyApp());
-}
+void main() => runApp(HHApp());
 
-class MyApp extends StatelessWidget {
+class HHApp extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(debugShowCheckedModeBanner: false,
-      title: 'Get Request',
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: HomePage(),
-    );
+  State<StatefulWidget> createState() {
+    // TODO: implement createState
+    return _HHApp();
   }
 }
 
-class HomePage extends StatefulWidget {
-  @override
-  _HomePageState createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-
+class _HHApp extends State<HHApp> {
   String greetings = '';
+  final HttpService http = HttpService();
+  Example example;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-          title: Text('Hobby Hub UI'),
+    return MaterialApp(
+        debugShowCheckedModeBanner: true,
+        theme: ThemeData(
+          primarySwatch: Colors.green,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
-      //All this was written by a guy on YouTube xD
-      body: Container(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Text(greetings, //Text that will be displayed on the screen
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            Center( 
-              child: Container( //container that contains the button 
-                width: 150,    
-                height: 60,
-                child: RaisedButton(
-                  color: Colors.blue,
-                  onPressed: () async { //async function to perform http get
-
-                  final response = await http.get('http://192.168.7.2:5000/api/Hello'); //getting the response from our backend server script
-
-                  final decoded = json.decode(response.body) as Map<String, dynamic>; //converting it from json to key value pair 
-
-                  setState(() {
-                    greetings = decoded['greetings']; //changing the state of our widget on data update
-                  });
-
-                  },
-                  child: Text( 
-                    'Press',
-                    style: TextStyle(fontSize: 24,),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+        home: ExamplePage());
   }
+
+    
 }
 
+// // // onPressed: () async {
+// // //                         //async function to perform http get
+
+// // //                         final response = await http.get(
+// // //                             'http://192.168.7.2:5000/api/Hello'); //getting the response from our backend server script
+
+// // //                         final decoded = json.decode(response.body) as Map<
+// // //                             String,
+// // //                             dynamic>; //converting it from json to key value pair
+
+// // //                         setState(() {
+// // //                           greetings = decoded[
+// // //                               'greetings']; //changing the state of our widget on data update
+// // //                         });
+// // //                       },
