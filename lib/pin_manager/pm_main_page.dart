@@ -17,7 +17,13 @@ class _PinManagerPageState extends State<PinManagerPage> {
       appBar: AppBar(
         backgroundColor: Colors.green,
         elevation: 0,
-        leading: Icon(Icons.menu),
+        leading: IconButton(
+          icon: Icon(Icons.menu),
+          onPressed: () {
+            // Scaffold.of(context).openDrawer();
+            
+          },
+        ),
         title: Center(
             child: Text(
           "Pin Manager",
@@ -50,35 +56,42 @@ class _PinManagerPageState extends State<PinManagerPage> {
                   ),
                 ),
               ),
-              Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        RaisedButton(
-                          onPressed: () async {
-                            http.getPinData(restURL: 'hello');
-                          },
-                          child: Text('Grab Pin Data'),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        RaisedButton(
-                          onPressed: () async {
-                            http.getPinData(restURL: 'hello');
-                          },
-                          child: Text('Send Pin Data'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+              RaisedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('Go Back to Home Page'),
               ),
+              // Center(
+              //   child: Row(
+              //     mainAxisAlignment: MainAxisAlignment.center,
+              //     children: [
+              //       Column(
+              //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //         children: [
+              //           RaisedButton(
+              //             onPressed: () async {
+              //               http.getPinData(restURL: 'hello');
+              //             },
+              //             child: Text('Grab Pin Data'),
+              //           ),
+              //         ],
+              //       ),
+              //       SizedBox(width:15),
+              //       Column(
+              //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //         children: [
+              //           RaisedButton(
+              //             onPressed: () async {
+              //               http.getPinData(restURL: 'hello');
+              //             },
+              //             child: Text('Send Pin Data'),
+              //           ),
+              //         ],
+              //       ),
+              //     ],
+              //   ),
+              // ),
               Container(
                 height: 400,
                 width: double.infinity,
@@ -88,25 +101,36 @@ class _PinManagerPageState extends State<PinManagerPage> {
                     if (snapshot.hasData) {
                       List<Pin> pins = snapshot.data;
                       return ListView(
-                        
                         children: pins
                             .map(
                               (Pin pin) => ListTile(
                                 title: Text(pin.namedPin),
                                 subtitle: Text(pin.type),
                                 onTap: () => showDialog(
-                                  context: context,
-                                  builder: (_) => AlertDialog(
-                                    title: Text("Pin Info"),
-                                    content: Text("Are these settings correct?"),
-                                    actions: [
-                                      FlatButton(onPressed: () {}, child: Text('Yes')),
-                                      FlatButton(onPressed: () {}, child: Text('No')),
-                                      FlatButton(onPressed: () {}, child: Text('Change')),
-                                    ],
-                                  ),
-                                  barrierDismissible: false
-                                ),
+                                    context: context,
+                                    builder: (_) => AlertDialog(
+                                          title: Text("Pin Info"),
+                                          content: Text(
+                                              "Are these settings correct?"),
+                                          actions: [
+                                            FlatButton(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                                child: Text('Yes')),
+                                            FlatButton(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                                child: Text('No')),
+                                            FlatButton(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                                child: Text('Change')),
+                                          ],
+                                        ),
+                                    barrierDismissible: false),
                               ),
                             )
                             .toList(),
@@ -115,7 +139,7 @@ class _PinManagerPageState extends State<PinManagerPage> {
                     return Center(child: CircularProgressIndicator());
                   },
                 ),
-              )
+              ),
             ],
           ),
         ),
