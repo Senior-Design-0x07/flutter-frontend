@@ -30,7 +30,7 @@ class _HHApp extends State<HHApp> {
           leading: Icon(Icons.menu),
           title: Center(
               child: Text(
-            "Home Page",
+            "Hobby Hub Home",
             style: TextStyle(color: Colors.white),
           )),
           actions: <Widget>[
@@ -74,7 +74,7 @@ class _HHApp extends State<HHApp> {
                     SizedBox(width: 15),
                     RaisedButton(
                       padding: EdgeInsets.all(15),
-                      child: Text('WiFi Page'),
+                      child: Text('WiFi Login'),
                       onPressed: () {
                         Navigator.of(context).push(
                             MaterialPageRoute(builder: (context) => WifiPage()));

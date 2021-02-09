@@ -62,36 +62,36 @@ class _PinManagerPageState extends State<PinManagerPage> {
                 },
                 child: Text('Go Back to Home Page'),
               ),
-              // Center(
-              //   child: Row(
-              //     mainAxisAlignment: MainAxisAlignment.center,
-              //     children: [
-              //       Column(
-              //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //         children: [
-              //           RaisedButton(
-              //             onPressed: () async {
-              //               http.getPinData(restURL: 'hello');
-              //             },
-              //             child: Text('Grab Pin Data'),
-              //           ),
-              //         ],
-              //       ),
-              //       SizedBox(width:15),
-              //       Column(
-              //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //         children: [
-              //           RaisedButton(
-              //             onPressed: () async {
-              //               http.getPinData(restURL: 'hello');
-              //             },
-              //             child: Text('Send Pin Data'),
-              //           ),
-              //         ],
-              //       ),
-              //     ],
-              //   ),
-              // ),
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        RaisedButton(
+                          onPressed: () async {
+                            http.getPinData(restURL: 'hello');
+                          },
+                          child: Text('Grab Pin Data'),
+                        ),
+                      ],
+                    ),
+                    SizedBox(width:15),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        RaisedButton(
+                          onPressed: () async {
+                            http.getPinData(restURL: 'hello');
+                          },
+                          child: Text('Send Pin Data'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
               Container(
                 height: 400,
                 width: double.infinity,
