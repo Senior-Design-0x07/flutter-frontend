@@ -21,7 +21,6 @@ class _PinManagerPageState extends State<PinManagerPage> {
           icon: Icon(Icons.menu),
           onPressed: () {
             // Scaffold.of(context).openDrawer();
-            
           },
         ),
         title: Center(
@@ -61,36 +60,6 @@ class _PinManagerPageState extends State<PinManagerPage> {
                   Navigator.of(context).pop();
                 },
                 child: Text('Go Back to Home Page'),
-              ),
-              Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        RaisedButton(
-                          onPressed: () async {
-                            http.getPinData(restURL: 'hello');
-                          },
-                          child: Text('Grab Pin Data'),
-                        ),
-                      ],
-                    ),
-                    SizedBox(width:15),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        RaisedButton(
-                          onPressed: () async {
-                            http.getPinData(restURL: 'hello');
-                          },
-                          child: Text('Send Pin Data'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
               ),
               Container(
                 height: 400,

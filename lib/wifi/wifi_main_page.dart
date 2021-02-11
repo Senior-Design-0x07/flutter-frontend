@@ -6,6 +6,9 @@ class WifiPage extends StatefulWidget {
 }
 
 class _WifiPageState extends State<WifiPage> {
+  String ssid = "";
+  String password = "";
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,18 +38,80 @@ class _WifiPageState extends State<WifiPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(10.0),
-          child: Column(children: [
-            Center(child: Text("No Data")),
-            SizedBox(
-              height: 15,
-            ),
-            RaisedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Go Back to Home Page'),
-            ),
-          ]),
+          child: Column(
+            children: [
+              new Card(
+                child: Column(
+                  children: [
+                    new Container(
+                      margin: const EdgeInsets.all(10),
+                      child: TextField(
+                        maxLines: 15,
+                        readOnly: true,
+                        obscureText: false,
+                        decoration: InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Nearby Networks'),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+              new Card(
+                child: Column(
+                  children: [
+                    new Container(
+                      margin: const EdgeInsets.all(30),
+                      child: TextField(
+                        onChanged: (String str) {
+                          ssid = str;
+                        },
+                        obscureText: false,
+                        decoration: InputDecoration(
+                            border: OutlineInputBorder(), labelText: 'SSID'),
+                      ),
+                    ),
+                    new Container(
+                      margin: const EdgeInsets.all(30),
+                      child: TextField(
+                        onChanged: (String str) {
+                          ssid = str;
+                        },
+                        obscureText: true,
+                        decoration: InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Password'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  new Container(
+                    child: RaisedButton(
+                      onPressed: () {},
+                      child: Text('Scan'),
+                    ),
+                  ),
+                  new Container(
+                    child: RaisedButton(
+                      onPressed: () {},
+                      child: Text('Connect'),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10,),
+              RaisedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('Go Back to Home Page'),
+              ),
+            ],
+          ),
         ),
       ),
     );
