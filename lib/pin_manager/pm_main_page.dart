@@ -74,7 +74,22 @@ class _PinManagerPageState extends State<PinManagerPage> {
                             .map(
                               (Pin pin) => ListTile(
                                 title: Text(pin.namedPin),
-                                subtitle: Text(pin.type),
+                                subtitle: Row(
+                                  children: [
+                                    Text("Pin: "),
+                                    Text(
+                                      pin.pin,
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    Text(" Type: "),
+                                    Text(
+                                      pin.type.toString(),
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
                                 onTap: () => showDialog(
                                     context: context,
                                     builder: (_) => AlertDialog(
@@ -105,7 +120,14 @@ class _PinManagerPageState extends State<PinManagerPage> {
                             .toList(),
                       );
                     }
-                    return Center(child: CircularProgressIndicator());
+                    return Column(
+                      children: [
+                        SizedBox(height: 25,),
+                        Text("Grabbing Data"),
+                        SizedBox(height: 20,),
+                        Center(child: CircularProgressIndicator()),
+                      ],
+                    );
                   },
                 ),
               ),

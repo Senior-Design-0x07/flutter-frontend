@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hobby_hub_ui/http/http_service.dart';
+import 'package:hobby_hub_ui/models/network.dart';
 
 class WifiPage extends StatefulWidget {
   @override
@@ -8,6 +10,8 @@ class WifiPage extends StatefulWidget {
 class _WifiPageState extends State<WifiPage> {
   String ssid = "";
   String password = "";
+  HttpService http = new HttpService();
+  bool buttonPressed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -43,17 +47,50 @@ class _WifiPageState extends State<WifiPage> {
               new Card(
                 child: Column(
                   children: [
-                    new Container(
-                      margin: const EdgeInsets.all(10),
-                      child: TextField(
-                        maxLines: 15,
-                        readOnly: true,
-                        obscureText: false,
-                        decoration: InputDecoration(
-                            border: OutlineInputBorder(),
-                            labelText: 'Nearby Networks'),
-                      ),
-                    )
+                    Container(
+                      height: 400,
+                      width: double.infinity,
+                      child: buttonPressed
+                          ? FutureBuilder(
+                              future: http.getScannedNetworks(
+                                  restURL: 'api/scan_wifi'),
+                              builder: (BuildContext context,
+                                  AsyncSnapshot snapshot) {
+                                if (snapshot.hasData) {
+                                  List<Network> networks = snapshot.data;
+                                  return ListView(
+                                    children: networks
+                                        .map(
+                                          (Network network) => ListTile(
+                                            title: Text(network.name),
+                                          ),
+                                        )
+                                        .toList(),
+                                  );
+                                }
+                                return Column(
+                                  children: [
+                                    Text("Grabbing Data"),
+                                    SizedBox(
+                                      height: 15,
+                                    ),
+                                    Center(child: CircularProgressIndicator()),
+                                  ],
+                                );
+                              },
+                            )
+                          : new Container(
+                              margin: const EdgeInsets.all(10),
+                              child: TextField(
+                                maxLines: 15,
+                                readOnly: true,
+                                obscureText: false,
+                                decoration: InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    labelText: 'Nearby Networks'),
+                              ),
+                            ),
+                    ),
                   ],
                 ),
               ),
@@ -91,7 +128,10 @@ class _WifiPageState extends State<WifiPage> {
                 children: [
                   new Container(
                     child: RaisedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        buttonPressed = true;
+                        setState(() {});
+                      },
                       child: Text('Scan'),
                     ),
                   ),
@@ -103,7 +143,9 @@ class _WifiPageState extends State<WifiPage> {
                   ),
                 ],
               ),
-              SizedBox(height: 10,),
+              SizedBox(
+                height: 10,
+              ),
               RaisedButton(
                 onPressed: () {
                   Navigator.of(context).pop();
