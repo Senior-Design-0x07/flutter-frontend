@@ -16,7 +16,7 @@ class _HHApp extends State<HHApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: true,
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.green,
         backgroundColor: Colors.white,
