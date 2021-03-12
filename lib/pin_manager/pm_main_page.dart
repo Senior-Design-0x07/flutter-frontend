@@ -9,6 +9,7 @@ class PinManagerPage extends StatefulWidget {
 
 class _PinManagerPageState extends State<PinManagerPage> {
   HttpService http = new HttpService();
+  var _thing = 'Http Post';
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +61,16 @@ class _PinManagerPageState extends State<PinManagerPage> {
                   Navigator.of(context).pop();
                 },
                 child: Text('Go Back to Home Page'),
+              ),
+              SizedBox(height: 15),
+              FlatButton(
+                onPressed: () async {
+                  _thing = await http.postSelectedNetwork(
+                      restURL: 'api/pin_manager',
+                      postBody: {"ssid": "poop", "password": "bartman7"});
+                  setState(() {});
+                },
+                child: Text(_thing),
               ),
               Container(
                 height: 400,
@@ -122,9 +133,13 @@ class _PinManagerPageState extends State<PinManagerPage> {
                     }
                     return Column(
                       children: [
-                        SizedBox(height: 25,),
+                        SizedBox(
+                          height: 25,
+                        ),
                         Text("Grabbing Data"),
-                        SizedBox(height: 20,),
+                        SizedBox(
+                          height: 20,
+                        ),
                         Center(child: CircularProgressIndicator()),
                       ],
                     );
