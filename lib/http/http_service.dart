@@ -10,6 +10,9 @@ import 'package:http/http.dart';
 class HttpService {
   final String ipUrl = "http://192.168.0.66:5000";
 
+  /*
+      Pin Manager Http Requests
+  */
   Future<List<Pin>> getPinData({@required var restURL}) async {
     Response res = await get("$ipUrl/$restURL");
     if (res.statusCode == 200) {
@@ -19,6 +22,24 @@ class HttpService {
       return pinData;
     } else {
       throw Exception('Failed to grab Pin Data');
+    }
+  }
+
+  Future<Pin> getPin({@required var restURL, @required String pinName}) async {
+    Response res = await get("$ipUrl/$restURL/$pinName");
+    if (res.statusCode == 200) {
+      return Pin.fromJson(pinName, jsonDecode(res.body));
+    } else {
+      throw Exception('Failed to grab Pin: ' + pinName);
+    }
+  }
+
+  Future<void> resetPinConfig({@required var restURL}) async {
+    Response res = await get("$ipUrl/$restURL");
+    if (res.statusCode == 200) {
+      return null;
+    } else {
+      throw Exception('Failed to Clear Pin Config');
     }
   }
 

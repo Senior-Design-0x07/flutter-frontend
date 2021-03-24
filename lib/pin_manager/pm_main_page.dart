@@ -9,7 +9,8 @@ class PinManagerPage extends StatefulWidget {
 
 class _PinManagerPageState extends State<PinManagerPage> {
   HttpService http = new HttpService();
-  var _thing = 'Http Post';
+  Pin _pin = new Pin(namedPin: 'Null', type: 5, pin: 'Null');
+  bool pressed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +48,14 @@ class _PinManagerPageState extends State<PinManagerPage> {
           padding: EdgeInsets.all(10.0),
           child: Column(
             children: <Widget>[
+                if(pressed)
+                  Column(
+                    children: [
+                      Text('PIN NAME: ' + _pin.namedPin != null ? _pin.namedPin : 'NULL'),
+                      Text('PIN: ' + _pin.pin != null ? _pin.pin : 'NULL'),
+                      Text(_pin.type != null ? _pin.type as String : 'NULL987'),
+                    ],
+                  ),
               Container(
                 width: double.infinity,
                 height: 300,
@@ -62,73 +71,82 @@ class _PinManagerPageState extends State<PinManagerPage> {
                 },
                 child: Text('Go Back to Home Page'),
               ),
-              SizedBox(height: 15),
-              FlatButton(
-                onPressed: () async {
-                  _thing = await http.postSelectedNetwork(
-                      restURL: 'api/pin_manager',
-                      postBody: {"ssid": "poop", "password": "bartman7"});
-                  setState(() {});
-                },
-                child: Text(_thing),
-              ),
               Container(
                 height: 400,
                 width: double.infinity,
                 child: FutureBuilder(
-                  future: http.getPinData(restURL: 'api/pin_manager'),
+                  future: http.getPinData(
+                      restURL: 'api/pin_manager/grab_used_pins'),
                   builder: (BuildContext context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData) {
                       List<Pin> pins = snapshot.data;
-                      return ListView(
-                        children: pins
-                            .map(
-                              (Pin pin) => ListTile(
-                                title: Text(pin.namedPin),
-                                subtitle: Row(
-                                  children: [
-                                    Text("Pin: "),
-                                    Text(
-                                      pin.pin,
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold),
+                      return Column(
+                        children: [
+                          Expanded(
+                            child: ListView(
+                              children: pins
+                                  .map(
+                                    (Pin pin) => ListTile(
+                                      title: Text(pin.namedPin),
+                                      subtitle: Row(
+                                        children: [
+                                          Text("Pin: "),
+                                          Text(
+                                            pin.pin,
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          Text(" Type: "),
+                                          Text(
+                                            pin.type.toString(),
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                      onTap: () => showDialog(
+                                          context: context,
+                                          builder: (_) => AlertDialog(
+                                                title: Text("Pin Info"),
+                                                content: Text(
+                                                    "Are these settings correct?"),
+                                                actions: [
+                                                  FlatButton(
+                                                      onPressed: () {
+                                                        http.resetPinConfig(
+                                                            restURL:
+                                                                'api/pin_manager/reset_config');
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                      child: Text('CLEAR')),
+                                                  FlatButton(
+                                                      onPressed: () async {
+                                                        _pin = await http.getPin(
+                                                            restURL:
+                                                                'api/pins/get_pin', pinName: pin.namedPin);
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                        setState(() {
+                                                          pressed = true;
+                                                        });
+                                                      },
+                                                      child: Text('GET PIN')),
+                                                  FlatButton(
+                                                      onPressed: () async {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                      child: Text('REQUEST')),
+                                                ],
+                                              ),
+                                          barrierDismissible: false),
                                     ),
-                                    Text(" Type: "),
-                                    Text(
-                                      pin.type.toString(),
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                                onTap: () => showDialog(
-                                    context: context,
-                                    builder: (_) => AlertDialog(
-                                          title: Text("Pin Info"),
-                                          content: Text(
-                                              "Are these settings correct?"),
-                                          actions: [
-                                            FlatButton(
-                                                onPressed: () {
-                                                  Navigator.of(context).pop();
-                                                },
-                                                child: Text('Yes')),
-                                            FlatButton(
-                                                onPressed: () {
-                                                  Navigator.of(context).pop();
-                                                },
-                                                child: Text('No')),
-                                            FlatButton(
-                                                onPressed: () {
-                                                  Navigator.of(context).pop();
-                                                },
-                                                child: Text('Change')),
-                                          ],
-                                        ),
-                                    barrierDismissible: false),
-                              ),
-                            )
-                            .toList(),
+                                  )
+                                  .toList(),
+                            ),
+                          ),
+                        ],
                       );
                     }
                     return Column(

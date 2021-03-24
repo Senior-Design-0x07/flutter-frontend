@@ -13,4 +13,5 @@ class Pin {
         type: json['type'] as int,
         pin: json['pin'] as String);
   }
+  
 }
