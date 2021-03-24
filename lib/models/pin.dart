@@ -7,10 +7,8 @@ class Pin {
 
   Pin({@required this.namedPin, @required this.type, @required this.pin});
 
-  factory Pin.fromJson(String name, Map<String, dynamic> json ) {
+  factory Pin.fromJson(String name, Map<String, dynamic> json) {
     return Pin(
-        namedPin: name,
-        type: json['type'] as int,
-        pin: json['pin'] as String);
+        namedPin: name, type: json['type'] as int, pin: json['pin'] as String);
   }
 }

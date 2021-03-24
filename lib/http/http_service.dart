@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:hobby_hub_ui/models/network.dart';
 import 'package:hobby_hub_ui/models/pin.dart';
 import 'package:http/http.dart';
 
@@ -8,7 +7,7 @@ import 'package:http/http.dart';
 // https://flutter.dev/docs/cookbook/networking/fetch-data#2-make-a-network-request
 
 class HttpService {
-  final String ipUrl = "http://192.168.0.66:5000";
+  final String ipUrl = "http://192.168.1.179:5000";
 
   Future<List<Pin>> getPinData({@required var restURL}) async {
     Response res = await get("$ipUrl/$restURL");
@@ -22,21 +21,20 @@ class HttpService {
     }
   }
 
-  Future<List<Network>> getScannedNetworks({@required var restURL}) async {
+  Future<String> getKnownNetworks({@required var restURL}) async {
     Response res = await get("$ipUrl/$restURL");
+    print(res.body);
     if (res.statusCode == 200) {
-      List<dynamic> body = jsonDecode(res.body);
-      List<Network> networkData =
-          body.map((dynamic item) => Network.fromJson(item)).toList();
-      return networkData;
+      return res.body;
     } else {
-      throw Exception('Failed to grab Networks');
+      throw Exception('Failed to grab Pin Data');
     }
   }
 
   Future<String> postSelectedNetwork(
       {@required var restURL, @required dynamic postBody}) async {
     Response res = await post("$ipUrl/$restURL", body: postBody);
+    print(res.body);
     if (res.statusCode == 200) {
       return "What is up";
     } else {
