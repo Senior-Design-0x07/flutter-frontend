@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hobby_hub_ui/pin_manager/pm_main_page.dart';
+import 'package:hobby_hub_ui/pin_manager/pinMain.dart';
 import 'package:hobby_hub_ui/program_manager/program_main_page.dart';
 import 'package:hobby_hub_ui/wifi/wifi_main_page.dart';
 
@@ -59,7 +59,7 @@ class _HHApp extends State<HHApp> {
                       child: Text('Pin Manager'),
                       onPressed: () {
                         Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => PinManagerPage()));
+                            builder: (context) => PinMain()));
                       },
                     ),
                     SizedBox(width: 15),

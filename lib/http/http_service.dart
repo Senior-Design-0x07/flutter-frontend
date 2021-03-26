@@ -34,6 +34,16 @@ class HttpService {
     }
   }
 
+  Future<bool> requestPin(
+      {@required var restURL, @required String pinName}) async {
+    Response res = await get("$ipUrl/$restURL/$pinName");
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) == 'true' ? true : false;
+    } else {
+      throw Exception('Failed to request Pin: ' + pinName);
+    }
+  }
+
   Future<void> resetPinConfig({@required var restURL}) async {
     Response res = await get("$ipUrl/$restURL");
     if (res.statusCode == 200) {
