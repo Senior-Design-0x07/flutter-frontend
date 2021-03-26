@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hobby_hub_ui/http/http_service.dart';
+import 'package:hobby_hub_ui/services/http_service.dart';
 import 'package:hobby_hub_ui/models/pin.dart';
 import 'package:hobby_hub_ui/pin_manager/pin_mapping/pinMappingList.dart';
 
