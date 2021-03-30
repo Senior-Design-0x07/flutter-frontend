@@ -13,7 +13,7 @@ class HttpService {
   /*
       Pin Manager Http Requests
   */
-  Future<List<Pin>> getPinData({@required var restURL}) async {
+  Future<List<Pin>> getPinList({@required var restURL}) async {
     Response res = await get("$ipUrl/$restURL");
     if (res.statusCode == 200) {
       List<Pin> pinData = [];
@@ -34,13 +34,22 @@ class HttpService {
     }
   }
 
-  Future<bool> requestPin(
+  Future<bool> requestNewPin(
       {@required var restURL, @required String pinName}) async {
     Response res = await get("$ipUrl/$restURL/$pinName");
     if (res.statusCode == 200) {
       return jsonDecode(res.body) == 'true' ? true : false;
     } else {
       throw Exception('Failed to request Pin: ' + pinName);
+    }
+  }
+
+  Future<void> clearUnusedPins({@required var restURL}) async {
+    Response res = await get("$ipUrl/$restURL");
+    if (res.statusCode == 200) {
+      return null;
+    } else {
+      throw Exception('Failed to Clear Pin Config');
     }
   }
 
@@ -53,6 +62,11 @@ class HttpService {
     }
   }
 
+
+
+  /*
+      Wifi Http Requests
+  */
   Future<List<Network>> getScannedNetworks({@required var restURL}) async {
     Response res = await get("$ipUrl/$restURL");
     if (res.statusCode == 200) {

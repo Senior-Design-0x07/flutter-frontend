@@ -44,7 +44,6 @@ class _MappedPinState extends State<MappedPin> {
                       onPressed: () {
                         http.resetPinConfig(
                             restURL: 'api/pin_manager/reset_config');
-                        setState(() {});
                         Navigator.of(context).pop();
                       },
                       child: Text('CLEAR')),
@@ -61,7 +60,7 @@ class _MappedPinState extends State<MappedPin> {
                       child: Text('GET PIN')),
                   FlatButton(
                       onPressed: () async {
-                         foundRequestedPin = await http.requestPin(
+                         foundRequestedPin = await http.requestNewPin(
                             restURL: 'api/pins/request_pin', pinName: 'sdfghj');
                         setState(() {});
                         Navigator.of(context).pop();
@@ -69,7 +68,7 @@ class _MappedPinState extends State<MappedPin> {
                       child: Text('REQUEST')),
                 ],
               ),
-          barrierDismissible: false),
+          barrierDismissible: true),
     );
   }
 }
