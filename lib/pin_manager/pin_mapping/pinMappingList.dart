@@ -19,51 +19,21 @@ class _PinMappingState extends State<PinMapping> {
   List<Pin> mappedPins = [];
   Pin selectedPin;
   String pinNameValue;
-  String codeDialog;
-  bool cmdButtonPressed = false;
   int type;
-
-  // Widget _showMappedPinList(List<Pin> pins) {
-  //   // return FutureBuilder(
-  //   //   future: http.getPinList(restURL: 'api/pin_manager/grab_used_pins'),
-  //   //   builder: (BuildContext context, AsyncSnapshot snapshot) {
-  //   //     if (snapshot.hasData) {
-  //   List<Pin> mappedPins = [];
-  //   return Expanded(
-  //     child: ListView(
-  //       children: mappedPins
-  //           .map((Pin pin) => MappedPin(
-  //                 mappedPin: pin,
-  //               ))
-  //           .toList(),
-  //     ),
-  //   );
-  //   // } else {
-  //   //   return Column(
-  //   //     children: [
-  //   //       SizedBox(
-  //   //         height: 25,
-  //   //       ),
-  //   //       Text("Grabbing Data"),
-  //   //       SizedBox(
-  //   //         height: 20,
-  //   //       ),
-  //   //       Center(child: CircularProgressIndicator()),
-  //   //     ],
-  //   //   );
-  //   // }
-  //   //   },
-  //   // );
-  // }
+  bool cmdSuccess = false;
+  bool cmdButtonPressed = false;
 
   Widget _checkCmdButton() {
     if (cmdButtonPressed) {
       cmdButtonPressed = false;
-      return PinOutputResponse(
-        type: type,
-      );
+      return Text("Hello");
+      // return PinOutputResponse(
+      //   type: type,
+      //   cmdSuccess: cmdSuccess,
+      //   pin: selectedPin,
+      // );
     } else {
-      return Column();
+      return Column(children: [Text("BLAH!!")],);
     }
   }
 
@@ -95,16 +65,57 @@ class _PinMappingState extends State<PinMapping> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
               IconButton(
+                iconSize: 30.0,
                 icon: const Icon(
                   Icons.add_box_outlined,
                   color: Colors.lightGreen,
-                  size: 35.0,
+                  size: 30.0,
                 ),
-                tooltip: 'Request New Pin',
+                tooltip: 'New Pin',
                 onPressed: () => showDialog(
                     context: context,
                     builder: (_) => AlertDialog(
-                          title: Text("Add Pin"),
+                          title: Center(child: Text("Add Pin")),
+                          content: TextField(
+                            onChanged: (value) {
+                              setState(() {
+                                pinNameValue = value;
+                              });
+                            },
+                            controller: _textFieldController,
+                            decoration:
+                                InputDecoration(hintText: "Pin Name..."),
+                          ),
+                          actions: [
+                            FlatButton(
+                                onPressed: () async {
+                                  await http.requestNewPin(
+                                      restURL: 'api/pins/request_pin',
+                                      pinName: pinNameValue);
+                                  setState(() {
+                                    cmdButtonPressed = true;
+                                    type = 1;
+                                    _refresh();
+                                    Navigator.of(context).pop();
+                                  });
+                                },
+                                child: Text('Add')),
+                          ],
+                        ),
+                    barrierDismissible: true),
+              ),
+              IconButton(
+                iconSize: 30.0,
+                icon: const Icon(
+                  Icons.push_pin_outlined,
+                  color: Colors.green,
+                  size: 30.0,
+                ),
+                tooltip: 'Find Pin',
+                onPressed: () => showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                          title: Center(child: Text("Find Pin")),
                           content: TextField(
                             onChanged: (value) {
                               setState(() {
@@ -119,88 +130,62 @@ class _PinMappingState extends State<PinMapping> {
                             FlatButton(
                                 onPressed: () async {
                                   cmdButtonPressed = true;
-                                  await http.requestNewPin(
-                                      restURL: 'api/pins/request_pin',
+                                  selectedPin = await http.getPin(
+                                      restURL: 'api/pins/get_pin',
                                       pinName: pinNameValue);
                                   setState(() {
-                                    _refresh();
+                                    type = 2;
                                     Navigator.of(context).pop();
                                   });
                                 },
-                                child: Text('Add')),
+                                child: Text('Request')),
                           ],
                         ),
                     barrierDismissible: true),
               ),
               IconButton(
-                icon: const Icon(
-                  Icons.push_pin_outlined,
-                  color: Colors.green,
-                  size: 35.0,
-                ),
-                tooltip: 'Get Pin',
-                onPressed: () => showDialog(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                          title: Text("Find Pin"),
-                          content: TextField(
-                            onChanged: (value) {
-                              setState(() {
-                                pinNameValue = value;
-                              });
-                            },
-                          ),
-                          actions: [
-                            FlatButton(
-                                onPressed: () async {
-                                  await http.requestNewPin(
-                                      restURL: 'api/pins/request_pin',
-                                      pinName: 'sdfghj');
-                                  setState(() {});
-                                  Navigator.of(context).pop();
-                                },
-                                child: Text('REQUEST')),
-                          ],
-                        ),
-                    barrierDismissible: true),
-              ),
-              IconButton(
+                  iconSize: 30.0,
                   icon: const Icon(
                     Icons.clear,
                     color: Colors.orange,
-                    size: 35.0,
+                    size: 30.0,
                   ),
                   tooltip: 'Clear Unused Pins',
                   onPressed: () async {
-                    await http.clearUnusedPins(
+                    cmdSuccess = await http.clearUnusedPins(
                         restURL: 'api/pin_manager/clear_unused');
                     setState(() {
+                      type = 3;
                       _refresh();
                     });
                   }),
               IconButton(
+                  iconSize: 30.0,
                   icon: const Icon(
                     Icons.remove_circle_outline,
                     color: Colors.redAccent,
-                    size: 35.0,
+                    size: 30.0,
                   ),
                   tooltip: 'Reset All Pins',
                   onPressed: () async {
-                    await http.resetPinConfig(
+                    cmdButtonPressed = true;
+                    cmdSuccess = await http.resetPinConfig(
                         restURL: 'api/pin_manager/reset_config');
                     setState(() {
+                      type = 4;
                       _refresh();
                     });
                   }),
               SizedBox(
-                width: 100,
+                width: 150,
               ),
               Container(
                 child: IconButton(
+                    iconSize: 30.0,
                     icon: const Icon(
                       Icons.refresh,
                       color: Colors.amber,
-                      size: 35.0,
+                      size: 30.0,
                     ),
                     tooltip: 'Refresh',
                     onPressed: () {
@@ -217,19 +202,25 @@ class _PinMappingState extends State<PinMapping> {
             child: Card(
               color: Colors.grey[100],
               child: Container(
-                height: 220,
-                child: ListView(
-                  scrollDirection: Axis.vertical,
-                  shrinkWrap: true,
-                  children: mappedPins
-                      .map((Pin pin) => MappedPin(
-                            mappedPin: pin,
-                          ))
-                      .toList(),
-                ),
-              ),
+                  height: 220,
+                  child: mappedPins.isNotEmpty
+                      ? ListView(
+                          scrollDirection: Axis.vertical,
+                          shrinkWrap: true,
+                          children: mappedPins
+                              .map((Pin pin) => MappedPin(
+                                    mappedPin: pin,
+                                  ))
+                              .toList(),
+                        )
+                      : Center(
+                          child: Text("No Pins Used"),
+                        )),
             ),
           ),
+        ),
+        SizedBox(
+          height: 10,
         ),
         _checkCmdButton(),
       ],

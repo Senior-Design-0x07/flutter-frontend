@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:hobby_hub_ui/services/http_service.dart';
 import 'package:hobby_hub_ui/pin_manager/pin_mapping/pinMappingList.dart';
+import 'package:hobby_hub_ui/services/navigation/appBar.dart';
+import 'package:hobby_hub_ui/services/navigation/navDrawer.dart';
 
 class PinMain extends StatelessWidget {
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
   final HttpService http = new HttpService();
 
   @override
@@ -92,34 +95,12 @@ class PinMain extends StatelessWidget {
       );
     } else if (Platform.isAndroid) {
       return Scaffold(
+        key: _scaffoldKey,
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.green,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.menu),
-            onPressed: () {
-              // Scaffold.of(context).openDrawer();
-            },
-          ),
-          title: Center(
-              child: Text(
-            "Pin Manager",
-            style: TextStyle(color: Colors.white),
-          )),
-          actions: <Widget>[
-            Padding(
-                padding: EdgeInsets.all(10.0),
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                      color: Colors.grey[400],
-                      borderRadius: BorderRadius.circular(10)),
-                  child: Center(child: Text("0")),
-                ))
-          ],
-        ),
+        drawer: NavigationDrawer(),
+        appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(60),
+            child: HHAppBar(title: 'Pin Manager', scaffoldKey: _scaffoldKey)),
         body: SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.all(10.0),
@@ -134,17 +115,8 @@ class PinMain extends StatelessWidget {
                     ),
                   ),
                 ),
-                RaisedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: Text('Go Back to Home Page'),
-                ),
-                SizedBox(
-                  height: 30,
-                ),
                 Container(
-                    height: 400,
+                    height: 350,
                     width: double.infinity,
                     child: PinMapping()),
               ],

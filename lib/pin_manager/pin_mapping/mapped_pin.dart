@@ -12,9 +12,7 @@ class MappedPin extends StatefulWidget {
 }
 
 class _MappedPinState extends State<MappedPin> {
-  HttpService http = HttpService();
-  bool pressed = false;
-  bool foundRequestedPin = false;
+  final HttpService http = HttpService();
 
   @override
   Widget build(BuildContext context) {
@@ -42,30 +40,14 @@ class _MappedPinState extends State<MappedPin> {
                 actions: [
                   FlatButton(
                       onPressed: () {
-                        http.resetPinConfig(
-                            restURL: 'api/pin_manager/reset_config');
                         Navigator.of(context).pop();
                       },
-                      child: Text('CLEAR')),
+                      child: Text('Change')),
                   FlatButton(
-                      onPressed: () async {
-                        await http.getPin(
-                            restURL: 'api/pins/get_pin',
-                            pinName: widget.mappedPin.namedPin);
-                        Navigator.of(context).pop();
-                        setState(() {
-                          pressed = true;
-                        });
-                      },
-                      child: Text('GET PIN')),
-                  FlatButton(
-                      onPressed: () async {
-                         foundRequestedPin = await http.requestNewPin(
-                            restURL: 'api/pins/request_pin', pinName: 'sdfghj');
-                        setState(() {});
+                      onPressed: () {
                         Navigator.of(context).pop();
                       },
-                      child: Text('REQUEST')),
+                      child: Text('Remove')),
                 ],
               ),
           barrierDismissible: true),

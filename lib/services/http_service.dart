@@ -44,21 +44,21 @@ class HttpService {
     }
   }
 
-  Future<void> clearUnusedPins({@required var restURL}) async {
+  Future<bool> clearUnusedPins({@required var restURL}) async {
     Response res = await get("$ipUrl/$restURL");
     if (res.statusCode == 200) {
-      return null;
+      return jsonDecode(res.body) == 'true' ? true : false;
     } else {
-      throw Exception('Failed to Clear Pin Config');
+      throw Exception('Failed to Clear Unused Pins');
     }
   }
 
-  Future<void> resetPinConfig({@required var restURL}) async {
+  Future<bool> resetPinConfig({@required var restURL}) async {
     Response res = await get("$ipUrl/$restURL");
     if (res.statusCode == 200) {
-      return null;
+      return jsonDecode(res.body) == 'true' ? true : false;
     } else {
-      throw Exception('Failed to Clear Pin Config');
+      throw Exception('Failed to Reset Pin Config');
     }
   }
 
