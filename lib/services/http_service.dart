@@ -29,6 +29,8 @@ class HttpService {
     Response res = await get("$ipUrl/$restURL/$pinName");
     if (res.statusCode == 200) {
       return Pin.fromJson(pinName, jsonDecode(res.body));
+    } else if (res.statusCode == 500) {
+      return null; // NO PIN WAS FOUND
     } else {
       throw Exception('Failed to grab Pin: ' + pinName);
     }
@@ -61,8 +63,6 @@ class HttpService {
       throw Exception('Failed to Reset Pin Config');
     }
   }
-
-
 
   /*
       Wifi Http Requests

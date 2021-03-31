@@ -116,9 +116,7 @@ class PinMain extends StatelessWidget {
                   ),
                 ),
                 Container(
-                    height: 350,
-                    width: double.infinity,
-                    child: PinMapping()),
+                    height: 350, width: double.infinity, child: PinMapping()),
               ],
             ),
           ),
