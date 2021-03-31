@@ -52,7 +52,7 @@ class _WifiPageState extends State<WifiPage> {
                       child: buttonPressed
                           ? FutureBuilder(
                               future: http.getKnownNetworks(
-                                  restURL: 'api/scan_wifi'),
+                                  restURL: 'api/wifi_request'),
                               builder: (BuildContext context,
                                   AsyncSnapshot snapshot) {
                                 if (snapshot.hasData) {
@@ -129,7 +129,7 @@ class _WifiPageState extends State<WifiPage> {
                     child: RaisedButton(
                       onPressed: () async {
                         await http.postSelectedNetwork(
-                            restURL: 'api/connect_wifi',
+                            restURL: 'api/wifi_request',
                             postBody: {"ssid": ssid, "password": password});
                         setState(() {});
                       },
