@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:hobby_hub_ui/services/http_service.dart';
-import 'package:hobby_hub_ui/models/network.dart';
 
 class WifiPage extends StatefulWidget {
   @override

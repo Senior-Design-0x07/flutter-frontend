@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:hobby_hub_ui/models/network.dart';
 import 'package:hobby_hub_ui/models/pin.dart';
 import 'package:http/http.dart';
 
@@ -74,24 +73,21 @@ class HttpService {
   /*
       Wifi Http Requests
   */
-  Future<List<Network>> getScannedNetworks({@required var restURL}) async {
+  Future<String> getKnownNetworks({@required var restURL}) async {
     Response res = await get("$ipUrl/$restURL");
+    print(res.body);
     if (res.statusCode == 200) {
-      List<dynamic> body = jsonDecode(res.body);
-      List<Network> networkData =
-          body.map((dynamic item) => Network.fromJson(item)).toList();
-      return networkData;
+      return res.body;
     } else {
-      throw Exception('Failed to grab Networks');
+      throw Exception('Failed to grab Pin Data');
     }
   }
 
-  Future<String> postSelectedNetwork(
+  Future<void> postSelectedNetwork(
       {@required var restURL, @required dynamic postBody}) async {
     Response res = await post("$ipUrl/$restURL", body: postBody);
-    if (res.statusCode == 200) {
-      return "What is up";
-    } else {
+    // print(res.body);
+    if (res.statusCode != 200) {
       throw Exception('Failed to post: $postBody to $restURL');
     }
   }
