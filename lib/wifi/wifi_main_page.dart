@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hobby_hub_ui/services/http_service.dart';
+import 'package:hobby_hub_ui/services/navigation/appBar.dart';
+import 'package:hobby_hub_ui/services/navigation/navDrawer.dart';
 
 class WifiPage extends StatefulWidget {
   @override
@@ -7,37 +9,22 @@ class WifiPage extends StatefulWidget {
 }
 
 class _WifiPageState extends State<WifiPage> {
+  final HttpService http = new HttpService();
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
+
   String ssid = "";
   String password = "";
-  HttpService http = new HttpService();
   bool buttonPressed = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.green,
-        elevation: 0,
-        leading: Icon(Icons.menu),
-        title: Center(
-            child: Text(
-          "WiFi Login",
-          style: TextStyle(color: Colors.white),
-        )),
-        actions: <Widget>[
-          Padding(
-              padding: EdgeInsets.all(10.0),
-              child: Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                    color: Colors.grey[400],
-                    borderRadius: BorderRadius.circular(10)),
-                child: Center(child: Text("0")),
-              ))
-        ],
-      ),
+      drawer: NavigationDrawer(),
+      appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: HHAppBar(title: 'Wifi', scaffoldKey: _scaffoldKey)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(10.0),
@@ -137,15 +124,6 @@ class _WifiPageState extends State<WifiPage> {
                     ),
                   ),
                 ],
-              ),
-              SizedBox(
-                height: 10,
-              ),
-              RaisedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text('Go Back to Home Page'),
               ),
             ],
           ),

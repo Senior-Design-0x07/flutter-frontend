@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:hobby_hub_ui/http/http_service.dart';
+import 'package:hobby_hub_ui/services/navigation/appBar.dart';
+import 'package:hobby_hub_ui/services/navigation/navDrawer.dart';
 
 class ProgramManagerPage extends StatefulWidget {
   @override
@@ -6,32 +9,18 @@ class ProgramManagerPage extends StatefulWidget {
 }
 
 class _ProgramManagerPageState extends State<ProgramManagerPage> {
+  final HttpService http = new HttpService();
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.green,
-        elevation: 0,
-        leading: Icon(Icons.menu),
-        title: Center(
-            child: Text(
-          "Program Manager",
-          style: TextStyle(color: Colors.white),
-        )),
-        actions: <Widget>[
-          Padding(
-              padding: EdgeInsets.all(10.0),
-              child: Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                    color: Colors.grey[400],
-                    borderRadius: BorderRadius.circular(10)),
-                child: Center(child: Text("0")),
-              ))
-        ],
-      ),
+      drawer: NavigationDrawer(),
+      appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: HHAppBar(title: 'Program Manager', scaffoldKey: _scaffoldKey)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(10.0),
@@ -156,15 +145,6 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                   alignment: Alignment.centerRight,
                   child: RaisedButton(
                       onPressed: () {}, child: Text("Upload Programs"))),
-            ),
-            SizedBox(
-              height: 25,
-            ),
-            RaisedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Go Back to Home Page'),
             ),
           ]),
         ),
