@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:hobby_hub_ui/http/http_service.dart';
-import 'package:hobby_hub_ui/models/network.dart';
 
 class WifiPage extends StatefulWidget {
   @override
@@ -52,21 +51,12 @@ class _WifiPageState extends State<WifiPage> {
                       width: double.infinity,
                       child: buttonPressed
                           ? FutureBuilder(
-                              future: http.getScannedNetworks(
-                                  restURL: 'api/scan_wifi'),
+                              future: http.getKnownNetworks(
+                                  restURL: 'api/wifi_request'),
                               builder: (BuildContext context,
                                   AsyncSnapshot snapshot) {
                                 if (snapshot.hasData) {
-                                  List<Network> networks = snapshot.data;
-                                  return ListView(
-                                    children: networks
-                                        .map(
-                                          (Network network) => ListTile(
-                                            title: Text(network.name),
-                                          ),
-                                        )
-                                        .toList(),
-                                  );
+                                  return Text(snapshot.data);
                                 }
                                 return Column(
                                   children: [
@@ -112,7 +102,7 @@ class _WifiPageState extends State<WifiPage> {
                       margin: const EdgeInsets.all(30),
                       child: TextField(
                         onChanged: (String str) {
-                          ssid = str;
+                          password = str;
                         },
                         obscureText: true,
                         decoration: InputDecoration(
@@ -137,7 +127,12 @@ class _WifiPageState extends State<WifiPage> {
                   ),
                   new Container(
                     child: RaisedButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        await http.postSelectedNetwork(
+                            restURL: 'api/wifi_request',
+                            postBody: {"ssid": ssid, "password": password});
+                        setState(() {});
+                      },
                       child: Text('Connect'),
                     ),
                   ),

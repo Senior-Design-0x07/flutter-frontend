@@ -67,8 +67,8 @@ class _HHApp extends State<HHApp> {
                       padding: EdgeInsets.all(15),
                       child: Text('Program Manager'),
                       onPressed: () {
-                        Navigator.of(context).push(
-                            MaterialPageRoute(builder: (context) => ProgramManagerPage()));
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => ProgramManagerPage()));
                       },
                     ),
                     SizedBox(width: 15),
@@ -76,8 +76,8 @@ class _HHApp extends State<HHApp> {
                       padding: EdgeInsets.all(15),
                       child: Text('WiFi Login'),
                       onPressed: () {
-                        Navigator.of(context).push(
-                            MaterialPageRoute(builder: (context) => WifiPage()));
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => WifiPage()));
                       },
                     )
                   ],
