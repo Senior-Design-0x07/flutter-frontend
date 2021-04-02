@@ -14,34 +14,12 @@ class PinMain extends StatelessWidget {
   Widget build(BuildContext context) {
     if (kIsWeb) {
       return Scaffold(
+        key: _scaffoldKey,
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.green,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.menu),
-            onPressed: () {
-              // Scaffold.of(context).openDrawer();
-            },
-          ),
-          title: Center(
-              child: Text(
-            "Pin Manager",
-            style: TextStyle(color: Colors.white),
-          )),
-          actions: <Widget>[
-            Padding(
-                padding: EdgeInsets.all(10.0),
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                      color: Colors.grey[400],
-                      borderRadius: BorderRadius.circular(10)),
-                  child: Center(child: Text("0")),
-                ))
-          ],
-        ),
+        drawer: NavigationDrawer(),
+        appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(60),
+            child: HHAppBar(title: 'Pin Manager', scaffoldKey: _scaffoldKey)),
         body: SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.all(10.0),
@@ -56,38 +34,8 @@ class PinMain extends StatelessWidget {
                     ),
                   ),
                 ),
-                RaisedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: Text('Go Back to Home Page'),
-                ),
-                SizedBox(
-                  height: 30,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: const <Widget>[
-                    Icon(
-                      Icons.favorite,
-                      color: Colors.pink,
-                      size: 24.0,
-                      semanticLabel: 'Text to announce in accessibility modes',
-                    ),
-                    Icon(
-                      Icons.audiotrack,
-                      color: Colors.green,
-                      size: 30.0,
-                    ),
-                    Icon(
-                      Icons.beach_access,
-                      color: Colors.blue,
-                      size: 36.0,
-                    ),
-                  ],
-                ),
                 Container(
-                    height: 400, width: double.infinity, child: PinMapping()),
+                    height: 350, width: double.infinity, child: PinMapping()),
               ],
             ),
           ),
