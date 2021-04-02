@@ -20,7 +20,18 @@ class _HomeState extends State<Home> {
           preferredSize: const Size.fromHeight(60),
           child: HHAppBar(title: 'Hobby Hub Home', scaffoldKey: _scaffoldKey)),
       body: Column(
-        children: [Center(child: Text("Home Page"))],
+        children: [
+          Center(child: Text("I am a Home Page")),
+          Container(
+            width: double.infinity,
+            height: 300,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/BBboard_layout.png'),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

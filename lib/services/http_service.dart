@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:hobby_hub_ui/models/network.dart';
 import 'package:hobby_hub_ui/models/pin.dart';
 import 'package:http/http.dart';
@@ -8,13 +10,13 @@ import 'package:http/http.dart';
 // https://flutter.dev/docs/cookbook/networking/fetch-data#2-make-a-network-request
 
 class HttpService {
-  final String ipUrl = "http://192.168.0.66:5000";
+  final String ipUrl = "http://192.168.7.2:5000";
 
   /*
       Pin Manager Http Requests
   */
   Future<List<Pin>> getPinList({@required var restURL}) async {
-    Response res = await get("$ipUrl/$restURL");
+    Response res = await get("$ipUrl/$restURL").timeout(Duration(seconds: 3));
     if (res.statusCode == 200) {
       List<Pin> pinData = [];
       Map<String, dynamic> body = jsonDecode(res.body);
@@ -25,20 +27,13 @@ class HttpService {
     }
   }
 
-  Future<Pin> getPin({@required var restURL, @required String pinName}) async {
-    Response res = await get("$ipUrl/$restURL/$pinName");
-    if (res.statusCode == 200) {
-      return Pin.fromJson(pinName, jsonDecode(res.body));
-    } else if (res.statusCode == 500) {
-      return null; // NO PIN WAS FOUND
-    } else {
-      throw Exception('Failed to grab Pin: ' + pinName);
-    }
-  }
-
+  // Should be Future<Pin>? I think
   Future<bool> requestNewPin(
-      {@required var restURL, @required String pinName}) async {
-    Response res = await get("$ipUrl/$restURL/$pinName");
+      {@required var restURL,
+      @required String pinName,
+      @required int pinType}) async {
+    Response res = await get("$ipUrl/$restURL/$pinName/$pinType")
+        .timeout(Duration(seconds: 3));
     if (res.statusCode == 200) {
       return jsonDecode(res.body) == 'true' ? true : false;
     } else {
@@ -46,8 +41,20 @@ class HttpService {
     }
   }
 
+  Future<Pin> getPin({@required var restURL, @required String pinName}) async {
+    Response res =
+        await get("$ipUrl/$restURL/$pinName/0").timeout(Duration(seconds: 3));
+    if (res.statusCode == 200) {
+      return json.decode(res.body) != null
+          ? Pin.fromJson(pinName, jsonDecode(res.body))
+          : null;
+    } else {
+      throw Exception('Failed to grab Pin: ' + pinName);
+    }
+  }
+
   Future<bool> clearUnusedPins({@required var restURL}) async {
-    Response res = await get("$ipUrl/$restURL");
+    Response res = await get("$ipUrl/$restURL").timeout(Duration(seconds: 3));
     if (res.statusCode == 200) {
       return jsonDecode(res.body) == 'true' ? true : false;
     } else {
@@ -56,7 +63,7 @@ class HttpService {
   }
 
   Future<bool> resetPinConfig({@required var restURL}) async {
-    Response res = await get("$ipUrl/$restURL");
+    Response res = await get("$ipUrl/$restURL").timeout(Duration(seconds: 3));
     if (res.statusCode == 200) {
       return jsonDecode(res.body) == 'true' ? true : false;
     } else {

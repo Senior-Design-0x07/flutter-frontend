@@ -15,37 +15,61 @@ class _PinMappingState extends State<PinMapping> {
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
       new GlobalKey<RefreshIndicatorState>();
   TextEditingController _textFieldController = TextEditingController();
+  TextEditingController _textFieldController1 = TextEditingController();
 
   final HttpService http = HttpService();
   List<Pin> mappedPins = [];
   Pin selectedPin;
   String pinNameValue;
-  int type = 0;
+  String pinType = '1';
+  int buttonSelected = 0;
   bool cmdSuccess = false;
+  String error;
+  bool connection = true;
 
-  Widget _showErrors() {
-    switch (type) {
-      case 1: // Add Pin
-        return HHError(title: 'ADD PIN', message: 'Add Pin Error');
-      case 2: // Find Pin
-        return HHError(title: 'Found PIN', message: 'Found Pin Error');
-      case 3: // Clear Unused
-        return HHError(
-            title: 'Clear Unused', message: 'Clear Unused Pins Error');
-      case 4: // Remove All Pins
-        return HHError(title: 'Remove All', message: 'Remove Pins Error');
+  Widget _showConnectionErrors() {
+    switch (error) {
+      case 'TimeoutException':
+        return HHError(title: error, message: "Can't Connect",type: 0);
       default:
-        return Text('Im Temporary in ERRORS!');
+        return Text("I'M TEMPORARY in SHOW CONNECTION ERRORS");
     }
   }
 
-  Future<Null> _refresh() {
+  Widget _showButtonErrors() {
+    switch (buttonSelected) {
+      case 1: // Add Pin
+        return HHError(title: 'ADD PIN', message: 'Add Pin Error', type: 1);
+      case 2: // Find Pin
+        return HHError(title: 'Found PIN', message: 'Found Pin Error', type: 1);
+      case 3: // Clear Unused
+        return HHError(
+            title: 'Clear Unused', message: 'Clear Unused Pins Error', type: 1);
+      case 4: // Remove All Pins
+        return HHError(
+            title: 'Remove All', message: 'Remove Pins Error', type: 1);
+      default:
+        return Text('Im Temporary in Button ERRORS!');
+    }
+  }
+
+  void _handleErrors(Object error) {
+    setState(() {
+      this.error = error.runtimeType.toString();
+      connection = false;
+    });
+  }
+
+  Future<void> _refresh() {
     return http
         .getPinList(restURL: 'api/pin_manager/grab_used_pins')
         .then((_mappedPins) {
       setState(() {
+        connection = true;
         mappedPins = _mappedPins;
       });
+    }).catchError((Object error) {
+      _handleErrors(error);
     });
   }
 
@@ -62,7 +86,10 @@ class _PinMappingState extends State<PinMapping> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          if (!cmdSuccess && type != 0) _showErrors(),
+          if (!connection && error != null)
+            _showConnectionErrors(), // Connection Erros
+          if (!cmdSuccess && buttonSelected != 0)
+            _showButtonErrors(), //Button Errors
           Card(
             color: Colors.grey[200],
             child: Row(
@@ -80,21 +107,44 @@ class _PinMappingState extends State<PinMapping> {
                       context: context,
                       builder: (_) => AlertDialog(
                             title: Center(child: Text("Add Pin")),
-                            content: TextField(
-                              onChanged: (value) {
-                                pinNameValue = value;
-                              },
-                              controller: _textFieldController,
-                              decoration:
-                                  InputDecoration(hintText: "Pin Name..."),
+                            content: Container(
+                              height: 110,
+                              child: Column(
+                                children: [
+                                  TextField(
+                                    onChanged: (value) {
+                                      pinNameValue = value;
+                                    },
+                                    controller: _textFieldController,
+                                    decoration: InputDecoration(
+                                        hintText: "Pin Name..."),
+                                  ),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  TextField(
+                                    onChanged: (value) {
+                                      pinType = value;
+                                    },
+                                    controller: _textFieldController1,
+                                    decoration: InputDecoration(
+                                        hintText: "Pin Type..."),
+                                  ),
+                                ],
+                              ),
                             ),
                             actions: [
                               FlatButton(
                                   onPressed: () async {
-                                    cmdSuccess = await http.requestNewPin(
-                                        restURL: 'api/pins/request_pin',
-                                        pinName: pinNameValue);
-                                    type = 1;
+                                    cmdSuccess = await http
+                                        .requestNewPin(
+                                            restURL: 'api/pins/request_pin',
+                                            pinName: pinNameValue,
+                                            pinType: int.parse(pinType))
+                                        .catchError((Object error) {
+                                      _handleErrors(error);
+                                    });
+                                    buttonSelected = 1;
                                     Navigator.of(context).pop();
                                     _refresh();
                                   },
@@ -127,13 +177,17 @@ class _PinMappingState extends State<PinMapping> {
                               FlatButton(
                                   onPressed: () async {
                                     selectedPin = null;
-                                    selectedPin = await http.getPin(
-                                        restURL: 'api/pins/get_pin',
-                                        pinName: pinNameValue);
+                                    selectedPin = await http
+                                        .getPin(
+                                            restURL: 'api/pins/get_pin',
+                                            pinName: pinNameValue)
+                                        .catchError((Object error) {
+                                      _handleErrors(error);
+                                    });
                                     selectedPin != null
                                         ? cmdSuccess = true
                                         : cmdSuccess = false;
-                                    type = 2;
+                                    buttonSelected = 2;
                                     Navigator.of(context).pop();
                                     _refresh();
                                   },
@@ -151,9 +205,13 @@ class _PinMappingState extends State<PinMapping> {
                     ),
                     tooltip: 'Clear Unused Pins',
                     onPressed: () async {
-                      cmdSuccess = await http.clearUnusedPins(
-                          restURL: 'api/pin_manager/clear_unused');
-                      type = 3;
+                      cmdSuccess = await http
+                          .clearUnusedPins(
+                              restURL: 'api/pin_manager/clear_unused')
+                          .catchError((Object error) {
+                        _handleErrors(error);
+                      });
+                      buttonSelected = 3;
                       _refresh();
                     }),
                 IconButton(
@@ -165,9 +223,13 @@ class _PinMappingState extends State<PinMapping> {
                     ),
                     tooltip: 'Reset All Pins',
                     onPressed: () async {
-                      cmdSuccess = await http.resetPinConfig(
-                          restURL: 'api/pin_manager/reset_config');
-                      type = 4;
+                      cmdSuccess = await http
+                          .resetPinConfig(
+                              restURL: 'api/pin_manager/reset_config')
+                          .catchError((Object error) {
+                        _handleErrors(error);
+                      });
+                      buttonSelected = 4;
                       _refresh();
                     }),
                 SizedBox(
@@ -218,7 +280,7 @@ class _PinMappingState extends State<PinMapping> {
           ),
           cmdSuccess
               ? PinOutputResponse(
-                  type: type,
+                  type: buttonSelected,
                   pin: selectedPin,
                 )
               : Column() //Dummy Widget, Handled with error widget above

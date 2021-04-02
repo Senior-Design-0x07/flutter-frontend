@@ -32,6 +32,11 @@ class PinOutputResponse extends StatelessWidget {
                 ),
                 Text('Type: '),
                 Text(pin.type.toString()),
+                SizedBox(
+                  width: 10,
+                ),
+                Text('In Use: '),
+                Text(pin.inUse.toString()),
               ],
             ),
           ],
@@ -41,7 +46,7 @@ class PinOutputResponse extends StatelessWidget {
       case 4: // Remove All Pins
         return Center(child: Text('Remove All Pins Success'));
       default:
-        return Text('Im TEMPORARY in OUTPUT RESPONSE');
+        return Text('Im TEMPORARY in OUTPUT RESPONSE because of "0" ');
     }
   }
 }

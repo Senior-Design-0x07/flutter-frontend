@@ -7,9 +7,11 @@ class UndefinedRoute extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Center(
-        child: Text('ERROR for $name is not defined bro!'),
+    return Scaffold(
+      body: Container(
+        child: Center(
+          child: Text('ERROR for $name is not defined bro!'),
+        ),
       ),
     );
   }

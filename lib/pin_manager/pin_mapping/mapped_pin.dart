@@ -25,9 +25,14 @@ class _MappedPinState extends State<MappedPin> {
             widget.mappedPin.pin,
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          Text(" Type: "),
+          Text("  Type: "),
           Text(
             widget.mappedPin.type.toString(),
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          Text("  In Use: "),
+          Text(
+            widget.mappedPin.inUse.toString(),
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
         ],
