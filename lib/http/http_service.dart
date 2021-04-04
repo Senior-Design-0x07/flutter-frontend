@@ -8,7 +8,7 @@ import 'package:http/http.dart';
 // https://flutter.dev/docs/cookbook/networking/fetch-data#2-make-a-network-request
 
 class HttpService {
-  final String ipUrl = "http://192.168.0.66:5000";
+  static final String ipUrl = "http://192.168.7.2:5000";
 
   Future<List<Pin>> getPinData({@required var restURL}) async {
     Response res = await get("$ipUrl/$restURL");
@@ -39,6 +39,25 @@ class HttpService {
     Response res = await post("$ipUrl/$restURL", body: postBody);
     if (res.statusCode == 200) {
       return "What is up";
+    } else {
+      throw Exception('Failed to post: $postBody to $restURL');
+    }
+  }
+
+  static Future<String> getProgramList({@required var restURL}) async {
+    Response res = await get("$ipUrl/$restURL");
+    if (res.statusCode == 200) {
+      return res.body;
+    } else {
+      throw Exception('Failed to grab list or execute program command');
+    }
+  }
+
+  static Future<String> postProgramCommand(
+      {@required var restURL, @required dynamic postBody}) async {
+    Response res = await post("$ipUrl/$restURL", body: postBody);
+    if (res.statusCode == 200) {
+      return "Program Command Successful";
     } else {
       throw Exception('Failed to post: $postBody to $restURL');
     }
