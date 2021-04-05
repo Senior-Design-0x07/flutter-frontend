@@ -40,256 +40,292 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(10.0),
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Container(
-              height: 400,
-              width: double.infinity,
-              child: FutureBuilder(
-                future: HttpService.getProgramList(
-                    restURL: 'api/program_manager/running_programs'),
-                builder: (BuildContext context, AsyncSnapshot snapshot) {
-                  if (snapshot.hasData) {
-                    // convert list of running programs into List<String>
-                    String runningProgramsRaw = snapshot.data;
-                    LineSplitter ls = new LineSplitter();
-                    List<String> runningProgramsStr =
-                        ls.convert(runningProgramsRaw);
+        child: Column(children: [
+          Text(
+            "Running Programs",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          SingleChildScrollView(
+            padding: EdgeInsets.all(10.0),
+            child:
+                Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Container(
+                height: 400,
+                width: double.infinity,
+                child: FutureBuilder(
+                  future: HttpService.getProgramList(
+                      restURL: 'api/program_manager/running_programs'),
+                  builder: (BuildContext context, AsyncSnapshot snapshot) {
+                    if (snapshot.hasData) {
+                      // convert list of running programs into List<String>
+                      String runningProgramsRaw = snapshot.data;
+                      LineSplitter ls = new LineSplitter();
+                      List<String> runningProgramsStr =
+                          ls.convert(runningProgramsRaw);
 
-                    // convert list of Strings into Program objects
-                    for (var i = 1; i < runningProgramsStr.length - 1; i++) {
-                      String programInfo = runningProgramsStr[i];
-                      List<String> programParts = programInfo.trim().split(' ');
+                      // convert list of Strings into Program objects
+                      for (var i = 1; i < runningProgramsStr.length - 1; i++) {
+                        String programInfo = runningProgramsStr[i];
+                        List<String> programParts =
+                            programInfo.trim().split(' ');
 
-                      // remove unnecessary characters
-                      programParts[0] = programParts[0].replaceAll('"', '');
-                      programParts[1] = programParts[1].replaceAll('"', '');
-                      programParts[1] = programParts[1].replaceAll(',', '');
+                        // remove unnecessary characters
+                        programParts[0] = programParts[0].replaceAll('"', '');
+                        programParts[1] = programParts[1].replaceAll('"', '');
+                        programParts[1] = programParts[1].replaceAll(',', '');
 
-                      // create objects for storing data about each program
-                      Program currentProgram = new Program(
-                          filePath: programParts[0],
-                          fileName: programParts[0].split('/').last,
-                          processID: int.parse(programParts[1]));
+                        // create objects for storing data about each program
+                        Program currentProgram = new Program(
+                            filePath: programParts[0],
+                            fileName: programParts[0].split('/').last,
+                            processID: int.parse(programParts[1]));
 
-                      if (currentProgram != null) {
-                        runningPrograms.add(currentProgram);
+                        if (currentProgram != null) {
+                          runningPrograms.add(currentProgram);
+                        }
                       }
-                    }
 
-                    return ListView(
-                      children: runningPrograms
-                          .map(
-                            (Program currentProgram) => ListTile(
-                              title: Text(currentProgram.fileName),
-                              subtitle: Column(
-                                children: [
-                                  Row(
-                                    children: [
-                                      Text("Path: "),
-                                      Text(
-                                        currentProgram.filePath,
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    children: [
-                                      Text("Process ID: "),
-                                      Text(
-                                        currentProgram.processID.toString(),
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                      return ListView(
+                        children: runningPrograms
+                            .map(
+                              (Program currentProgram) => ListTile(
+                                title: Text(currentProgram.fileName),
+                                subtitle: Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text("Path: "),
+                                        Text(
+                                          currentProgram.filePath,
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                    Row(
+                                      children: [
+                                        Text("Process ID: "),
+                                        Text(
+                                          currentProgram.processID.toString(),
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                onTap: () => showDialog(
+                                    context: context,
+                                    builder: (_) => AlertDialog(
+                                          title: Text("Program Commands"),
+                                          content: Text(
+                                              "What would you like to do with this program?"),
+                                          actions: [
+                                            FlatButton(
+                                              onPressed: () async {
+                                                var output = await HttpService
+                                                    .postProgramCommand(
+                                                        restURL:
+                                                            'api/program_command',
+                                                        postBody: {
+                                                      "command":
+                                                          "pause_program",
+                                                      "program": "light1.py"
+                                                    });
+                                                setState(() {});
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: Text(("Pause")),
+                                            ),
+                                            FlatButton(
+                                              onPressed: () async {
+                                                var output = await HttpService
+                                                    .postProgramCommand(
+                                                        restURL:
+                                                            'api/program_command',
+                                                        postBody: {
+                                                      "command": "stop_program",
+                                                      "program": "light1.py"
+                                                    });
+                                                setState(() {});
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: Text(("Stop")),
+                                            ),
+                                            FlatButton(
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: Text(("Close Window")),
+                                            )
+                                          ],
+                                        ),
+                                    barrierDismissible: false),
                               ),
-                              onTap: () => showDialog(
-                                  context: context,
-                                  builder: (_) => AlertDialog(
-                                        title: Text("Program Commands"),
-                                        content: Text(
-                                            "What would you like to do with this program?"),
-                                        actions: [
-                                          FlatButton(
-                                            onPressed: () async {
-                                              var output = await HttpService
-                                                  .postProgramCommand(
-                                                      restURL:
-                                                          'api/program_command',
-                                                      postBody: {
-                                                    "command": "pause_program",
-                                                    "program": "light1.py"
-                                                  });
-                                              setState(() {});
-                                            },
-                                            child: Text(("Pause")),
-                                          ),
-                                          FlatButton(
-                                            onPressed: () async {
-                                              var output = await HttpService
-                                                  .postProgramCommand(
-                                                      restURL:
-                                                          'api/program_command',
-                                                      postBody: {
-                                                    "command": "stop_program",
-                                                    "program": "light1.py"
-                                                  });
-                                              setState(() {});
-                                            },
-                                            child: Text(("Stop")),
-                                          ),
-                                        ],
-                                      ),
-                                  barrierDismissible: false),
-                            ),
-                          )
-                          .toList(),
+                            )
+                            .toList(),
+                      );
+                    }
+                    return Column(
+                      children: [
+                        SizedBox(
+                          height: 25,
+                        ),
+                        Text("Grabbing List of Running Programs"),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        Center(child: CircularProgressIndicator()),
+                      ],
                     );
-                  }
-                  return Column(
-                    children: [
-                      SizedBox(
-                        height: 25,
-                      ),
-                      Text("Grabbing List of Running Programs"),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Center(child: CircularProgressIndicator()),
-                    ],
-                  );
-                },
+                  },
+                ),
               ),
-            ),
-            Container(
-              height: 400,
-              width: double.infinity,
-              child: FutureBuilder(
-                future: HttpService.getProgramList(
-                    restURL: 'api/program_manager/paused_programs'),
-                builder: (BuildContext context, AsyncSnapshot snapshot) {
-                  if (snapshot.hasData) {
-                    // convert list of running programs into List<String>
-                    String pausedProgramsRaw = snapshot.data;
-                    LineSplitter ls = new LineSplitter();
-                    List<String> pausedProgramsStr =
-                        ls.convert(pausedProgramsRaw);
+            ]),
+          ),
+          Text(
+            "Paused Programs",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          SingleChildScrollView(
+            padding: EdgeInsets.all(10.0),
+            child:
+                Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Container(
+                height: 400,
+                width: double.infinity,
+                child: FutureBuilder(
+                  future: HttpService.getProgramList(
+                      restURL: 'api/program_manager/paused_programs'),
+                  builder: (BuildContext context, AsyncSnapshot snapshot) {
+                    if (snapshot.hasData) {
+                      // convert list of running programs into List<String>
+                      String pausedProgramsRaw = snapshot.data;
+                      LineSplitter ls = new LineSplitter();
+                      List<String> pausedProgramsStr =
+                          ls.convert(pausedProgramsRaw);
 
-                    // convert list of Strings into Program objects
-                    for (var i = 1; i < pausedProgramsStr.length - 1; i++) {
-                      String programInfo = pausedProgramsStr[i];
-                      List<String> programParts = programInfo.trim().split(' ');
+                      // convert list of Strings into Program objects
+                      for (var i = 1; i < pausedProgramsStr.length - 1; i++) {
+                        String programInfo = pausedProgramsStr[i];
+                        List<String> programParts =
+                            programInfo.trim().split(' ');
 
-                      // remove unnecessary characters
-                      programParts[0] = programParts[0].replaceAll('"', '');
-                      programParts[1] = programParts[1].replaceAll('"', '');
-                      programParts[1] = programParts[1].replaceAll(',', '');
+                        // remove unnecessary characters
+                        programParts[0] = programParts[0].replaceAll('"', '');
+                        programParts[1] = programParts[1].replaceAll('"', '');
+                        programParts[1] = programParts[1].replaceAll(',', '');
 
-                      // create objects for storing data about each program
-                      Program currentProgram = new Program(
-                          filePath: programParts[0],
-                          fileName: programParts[0].split('/').last,
-                          processID: int.parse(programParts[1]));
+                        // create objects for storing data about each program
+                        Program currentProgram = new Program(
+                            filePath: programParts[0],
+                            fileName: programParts[0].split('/').last,
+                            processID: int.parse(programParts[1]));
 
-                      if (currentProgram != null) {
-                        pausedPrograms.add(currentProgram);
+                        if (currentProgram != null) {
+                          pausedPrograms.add(currentProgram);
+                        }
                       }
-                    }
 
-                    return ListView(
-                      children: pausedPrograms
-                          .map(
-                            (Program currentProgram) => ListTile(
-                              title: Text(currentProgram.fileName),
-                              subtitle: Column(
-                                children: [
-                                  Row(
-                                    children: [
-                                      Text("Path: "),
-                                      Text(
-                                        currentProgram.filePath,
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    children: [
-                                      Text("Process ID: "),
-                                      Text(
-                                        currentProgram.processID.toString(),
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                      return ListView(
+                        children: pausedPrograms
+                            .map(
+                              (Program currentProgram) => ListTile(
+                                title: Text(currentProgram.fileName),
+                                subtitle: Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text("Path: "),
+                                        Text(
+                                          currentProgram.filePath,
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                    Row(
+                                      children: [
+                                        Text("Process ID: "),
+                                        Text(
+                                          currentProgram.processID.toString(),
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                onTap: () => showDialog(
+                                    context: context,
+                                    builder: (_) => AlertDialog(
+                                          title: Text("Program Commands"),
+                                          content: Text(
+                                              "What would you like to do with this program?"),
+                                          actions: [
+                                            FlatButton(
+                                              onPressed: () async {
+                                                var output = await HttpService
+                                                    .postProgramCommand(
+                                                        restURL:
+                                                            'api/program_command',
+                                                        postBody: {
+                                                      "command":
+                                                          "continue_program",
+                                                      "program": "light1.py"
+                                                    });
+                                                setState(() {});
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: Text(("Continue")),
+                                            ),
+                                            FlatButton(
+                                              onPressed: () async {
+                                                var output = await HttpService
+                                                    .postProgramCommand(
+                                                        restURL:
+                                                            'api/program_command',
+                                                        postBody: {
+                                                      "command": "stop_program",
+                                                      "program": "light1.py"
+                                                    });
+                                                setState(() {});
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: Text(("Stop")),
+                                            ),
+                                            FlatButton(
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: Text(("Close Window")),
+                                            )
+                                          ],
+                                        ),
+                                    barrierDismissible: false),
                               ),
-                              onTap: () => showDialog(
-                                  context: context,
-                                  builder: (_) => AlertDialog(
-                                        title: Text("Program Commands"),
-                                        content: Text(
-                                            "What would you like to do with this program?"),
-                                        actions: [
-                                          FlatButton(
-                                            onPressed: () async {
-                                              var output = await HttpService
-                                                  .postProgramCommand(
-                                                      restURL:
-                                                          'api/program_command',
-                                                      postBody: {
-                                                    "command":
-                                                        "continue_program",
-                                                    "program": "light1.py"
-                                                  });
-                                              setState(() {});
-                                            },
-                                            child: Text(("Continue")),
-                                          ),
-                                          FlatButton(
-                                            onPressed: () async {
-                                              var output = await HttpService
-                                                  .postProgramCommand(
-                                                      restURL:
-                                                          'api/program_command',
-                                                      postBody: {
-                                                    "command": "stop_program",
-                                                    "program": "light1.py"
-                                                  });
-                                              setState(() {});
-                                            },
-                                            child: Text(("Stop")),
-                                          ),
-                                        ],
-                                      ),
-                                  barrierDismissible: false),
-                            ),
-                          )
-                          .toList(),
+                            )
+                            .toList(),
+                      );
+                    }
+                    return Column(
+                      children: [
+                        SizedBox(
+                          height: 25,
+                        ),
+                        Text("Grabbing List of Paused Programs"),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        Center(child: CircularProgressIndicator()),
+                      ],
                     );
-                  }
-                  return Column(
-                    children: [
-                      SizedBox(
-                        height: 25,
-                      ),
-                      Text("Grabbing List of Paused Programs"),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Center(child: CircularProgressIndicator()),
-                    ],
-                  );
-                },
+                  },
+                ),
               ),
-            ),
-          ]),
-        ),
+            ]),
+          ),
+        ]),
       ),
     );
   }
