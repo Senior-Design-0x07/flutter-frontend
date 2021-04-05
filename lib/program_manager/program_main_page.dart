@@ -130,7 +130,8 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                         postBody: {
                                                       "command":
                                                           "pause_program",
-                                                      "program": "light1.py"
+                                                      "program": currentProgram
+                                                          .fileName
                                                     });
                                                 setState(() {});
                                                 Navigator.of(context).pop();
@@ -145,7 +146,8 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                             'api/program_command',
                                                         postBody: {
                                                       "command": "stop_program",
-                                                      "program": "light1.py"
+                                                      "program": currentProgram
+                                                          .fileName
                                                     });
                                                 setState(() {});
                                                 Navigator.of(context).pop();
