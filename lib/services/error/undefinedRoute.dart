@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hobby_hub_ui/services/navigation/routes.dart' as router;
 
 class UndefinedRoute extends StatelessWidget {
   final String name;
@@ -10,7 +11,19 @@ class UndefinedRoute extends StatelessWidget {
     return Scaffold(
       body: Container(
         child: Center(
-          child: Text('ERROR for $name is not defined bro!'),
+          child: Column(
+            children: [
+              SizedBox(height: 300),
+              Text('ERROR for $name is not defined bro!'),
+              SizedBox(height: 15),
+              FlatButton(
+                  onPressed: () async {
+                    Navigator.pushReplacementNamed(
+                        context, router.ProgramManagerRoute);
+                  },
+                  child: Text("Home Page"))
+            ],
+          ),
         ),
       ),
     );

@@ -24,26 +24,35 @@ class _PinMappingState extends State<PinMapping> {
   String pinNameValue = "";
   int buttonSelected = 0;
   bool cmdSuccess = false;
-  List<String> error;
   bool connection = true;
+  List<String> connectionError;
+  String httpServiceError;
 
   Widget _showConnectionErrors() {
-    switch (error[0]) {
+    switch (connectionError[0]) {
       case 'Timeout':
         return HHError(
-            title: error[0] + " Exception", message: "Can't Connect", type: 0);
+            title: connectionError[0] + " Exception",
+            message: "Can't Connect",
+            type: 0);
       default:
-        return Text("I'M TEMPORARY in SHOW CONNECTION ERRORS");
+        return HHError(
+            title: "Exception",
+            message: "A connection error has ocurred",
+            type: 0);
     }
   }
 
   Widget _showHttpServiceErrors() {
-    switch (error[0]) {
-      case '': //Generic Exceptions from HTTP_SERVICE
+    switch (httpServiceError.split(":")[0]) {
+      case 'Exception': //Generic Exceptions from HTTP_SERVICE
         return HHError(
-            title: "Exception", message: error[1].substring(2), type: 0);
+            title: httpServiceError.split(":")[0],
+            message: httpServiceError.split("Exception: ")[1],
+            type: 0);
       default:
-        return Text("I'M TEMPORARY in SHOW CONNECTION ERRORS");
+        return HHError(
+            title: "Exception", message: "An error has ocurred", type: 0);
     }
   }
 
@@ -67,8 +76,12 @@ class _PinMappingState extends State<PinMapping> {
 
   void _handleErrors(Object error) {
     setState(() {
-      this.error = error.toString().split("Exception");
-      connection = false;
+      error.toString().split("Exception")[0] == "Timeout"
+          ? connection = false
+          : connection = true;
+      error.toString().split("Exception")[0] != ""
+          ? this.connectionError = error.toString().split("Exception")
+          : this.httpServiceError = error.toString();
     });
   }
 
@@ -129,9 +142,11 @@ class _PinMappingState extends State<PinMapping> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          if (!connection && error != null)
+          if (!connection && connectionError != null)
             _showConnectionErrors(), // Connection Errors
-          if (pinNameValue == "" && error != null) 
+          if (pinNameValue == "" &&
+              httpServiceError != null &&
+              buttonSelected != 0)
             _showHttpServiceErrors(),
           if (!cmdSuccess && buttonSelected != 0)
             _showButtonErrors(), //Button Errors
@@ -199,6 +214,7 @@ class _PinMappingState extends State<PinMapping> {
                                 actions: [
                                   FlatButton(
                                       onPressed: () async {
+                                        Navigator.of(context).pop();
                                         cmdSuccess = await http
                                             .requestNewPin(
                                                 restURL: 'api/pins/request_pin',
@@ -212,7 +228,6 @@ class _PinMappingState extends State<PinMapping> {
                                             ? cmdSuccess = false
                                             : cmdSuccess = true;
                                         buttonSelected = 1;
-                                        Navigator.of(context).pop();
                                         _refresh();
                                       },
                                       child: Text('Add')),
@@ -245,6 +260,7 @@ class _PinMappingState extends State<PinMapping> {
                                 actions: [
                                   FlatButton(
                                       onPressed: () async {
+                                        Navigator.of(context).pop();
                                         selectedPin = null;
                                         selectedPin = await http
                                             .getPin(
@@ -257,7 +273,6 @@ class _PinMappingState extends State<PinMapping> {
                                             ? cmdSuccess = true
                                             : cmdSuccess = false;
                                         buttonSelected = 2;
-                                        Navigator.of(context).pop();
                                         _refresh();
                                       },
                                       child: Text('Request')),
