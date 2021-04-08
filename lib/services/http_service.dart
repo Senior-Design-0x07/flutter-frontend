@@ -17,7 +17,7 @@ class HttpService {
   Future<List<Pin>> getPinList({@required var restURL}) async {
     Response res = await get("$ipUrl/$restURL")
         .catchError((e) {}) // Catches SocketException
-        .timeout(Duration(seconds: 3));
+        .timeout(Duration(seconds: 5));
     if (res.statusCode == 200) {
       List<Pin> pinData = [];
       Map<String, dynamic> body = jsonDecode(res.body);
@@ -34,26 +34,35 @@ class HttpService {
       {@required var restURL,
       @required String pinName,
       @required int pinType}) async {
-    Response res = await get("$ipUrl/$restURL/$pinName/$pinType")
-        .catchError((e) {}) // This catches the SocketException and does nothing
-        .timeout(Duration(seconds: 3));
-    if (res.statusCode == 200) {
-      return jsonDecode(res.body) == 'true' ? true : false;
+    if (pinName != "") {
+      Response res = await get("$ipUrl/$restURL/$pinName/$pinType")
+          .catchError(
+              (e) {}) // This catches the SocketException and does nothing
+          .timeout(Duration(seconds: 5));
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body) == 'true' ? true : false;
+      } else {
+        throw Exception('Failed to request pin: ' + pinName);
+      }
     } else {
-      throw Exception('Failed to request pin: ' + pinName);
+      throw Exception('Please enter a valid pin name');
     }
   }
 
   Future<Pin> getPin({@required var restURL, @required String pinName}) async {
     Response res = await get("$ipUrl/$restURL/$pinName/0")
         .catchError((e) {}) // This catches the SocketException and does nothing
-        .timeout(Duration(seconds: 3));
-    if (res.statusCode == 200) {
-      return json.decode(res.body) != null
-          ? Pin.fromJson(pinName, jsonDecode(res.body))
-          : null;
+        .timeout(Duration(seconds: 5));
+    if (pinName != "") {
+      if (res.statusCode == 200) {
+        return json.decode(res.body) != null
+            ? Pin.fromJson(pinName, jsonDecode(res.body))
+            : null;
+      } else {
+        throw Exception('Failed to grab pin: ' + pinName);
+      }
     } else {
-      throw Exception('Failed to grab pin: ' + pinName);
+      throw Exception('Please enter a valid pin name');
     }
   }
 
@@ -61,7 +70,7 @@ class HttpService {
   Future<bool> clearUnusedPins({@required var restURL}) async {
     Response res = await get("$ipUrl/$restURL")
         .catchError((e) {}) // This catches the SocketException and does nothing
-        .timeout(Duration(seconds: 3));
+        .timeout(Duration(seconds: 5));
     if (res.statusCode == 200) {
       return jsonDecode(res.body) == 'true' ? true : false;
     } else {
@@ -72,7 +81,7 @@ class HttpService {
   Future<bool> resetPinConfig({@required var restURL}) async {
     Response res = await get("$ipUrl/$restURL")
         .catchError((e) {}) // This catches the SocketException and does nothing
-        .timeout(Duration(seconds: 3));
+        .timeout(Duration(seconds: 5));
     if (res.statusCode == 200) {
       return jsonDecode(res.body) == 'true' ? true : false;
     } else {

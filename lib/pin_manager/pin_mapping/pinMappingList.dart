@@ -15,13 +15,13 @@ class _PinMappingState extends State<PinMapping> {
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
       new GlobalKey<RefreshIndicatorState>();
   TextEditingController _textFieldController = TextEditingController();
-  TextEditingController _textFieldController1 = TextEditingController();
 
   final HttpService http = HttpService();
+  final List<String> _pinOptions = ["GPIO", "PWM", "I2C", "ANALOG", "SPECIAL"];
+  String _pinType;
   List<Pin> mappedPins = [];
   Pin selectedPin;
-  String pinNameValue;
-  String pinType = '1';
+  String pinNameValue = "";
   int buttonSelected = 0;
   bool cmdSuccess = false;
   List<String> error;
@@ -32,6 +32,13 @@ class _PinMappingState extends State<PinMapping> {
       case 'Timeout':
         return HHError(
             title: error[0] + " Exception", message: "Can't Connect", type: 0);
+      default:
+        return Text("I'M TEMPORARY in SHOW CONNECTION ERRORS");
+    }
+  }
+
+  Widget _showHttpServiceErrors() {
+    switch (error[0]) {
       case '': //Generic Exceptions from HTTP_SERVICE
         return HHError(
             title: "Exception", message: error[1].substring(2), type: 0);
@@ -79,6 +86,23 @@ class _PinMappingState extends State<PinMapping> {
     );
   }
 
+  _selectPinType() {
+    switch (_pinType) {
+      case "GPIO":
+        return 1;
+      case "PWM":
+        return 2;
+      case "I2C":
+        return 3;
+      case "ANALOG":
+        return 4;
+      case "SPECIAL":
+        return 5;
+      default: //Default to GPIO
+        return 1;
+    }
+  }
+
   Future<void> _refresh() {
     return http
         .getPinList(restURL: 'api/pin_manager/grab_used_pins')
@@ -106,7 +130,9 @@ class _PinMappingState extends State<PinMapping> {
       child: Column(
         children: [
           if (!connection && error != null)
-            _showConnectionErrors(), // Connection Erros
+            _showConnectionErrors(), // Connection Errors
+          if (pinNameValue == "" && error != null) 
+            _showHttpServiceErrors(),
           if (!cmdSuccess && buttonSelected != 0)
             _showButtonErrors(), //Button Errors
           Card(
@@ -142,14 +168,31 @@ class _PinMappingState extends State<PinMapping> {
                                       SizedBox(
                                         height: 10,
                                       ),
-                                      TextField(
-                                        onChanged: (value) {
-                                          pinType = value;
-                                        },
-                                        controller: _textFieldController1,
-                                        decoration: InputDecoration(
-                                            hintText: "Pin Type..."),
-                                      ),
+                                      StatefulBuilder(builder:
+                                          (BuildContext context,
+                                              StateSetter dropDownState) {
+                                        return DropdownButton(
+                                          icon: const Icon(
+                                            Icons.push_pin_sharp,
+                                            color: Colors.green,
+                                            size: 30.0,
+                                          ),
+                                          isExpanded: true,
+                                          hint: Text("Select Pin Type..."),
+                                          items: _pinOptions
+                                              .map((String item) =>
+                                                  DropdownMenuItem<String>(
+                                                      child: Text(item),
+                                                      value: item))
+                                              .toList(),
+                                          onChanged: (String value) {
+                                            dropDownState(() {
+                                              _pinType = value;
+                                            });
+                                          },
+                                          value: _pinType,
+                                        );
+                                      }),
                                     ],
                                   ),
                                 ),
@@ -160,7 +203,7 @@ class _PinMappingState extends State<PinMapping> {
                                             .requestNewPin(
                                                 restURL: 'api/pins/request_pin',
                                                 pinName: pinNameValue,
-                                                pinType: int.parse(pinType))
+                                                pinType: _selectPinType())
                                             .catchError((Object error) {
                                           _handleErrors(error);
                                         });
@@ -269,18 +312,18 @@ class _PinMappingState extends State<PinMapping> {
                     ),
                     tooltip: 'Reset All Pins',
                     onPressed: () async {
-                        cmdSuccess = await http
-                            .resetPinConfig(
-                                restURL: 'api/pin_manager/reset_config')
-                            .catchError((Object error) {
-                          _handleErrors(error);
-                        });
-                        //Get rid of null
-                        cmdSuccess == null
-                            ? cmdSuccess = false
-                            : cmdSuccess = true;
-                        buttonSelected = 4;
-                        _refresh();
+                      cmdSuccess = await http
+                          .resetPinConfig(
+                              restURL: 'api/pin_manager/reset_config')
+                          .catchError((Object error) {
+                        _handleErrors(error);
+                      });
+                      //Get rid of null
+                      cmdSuccess == null
+                          ? cmdSuccess = false
+                          : cmdSuccess = true;
+                      buttonSelected = 4;
+                      _refresh();
                     }),
                 SizedBox(
                   width: 150,
