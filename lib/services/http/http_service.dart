@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:hobby_hub_ui/models/log.dart';
 import 'package:hobby_hub_ui/models/pin.dart';
 import 'package:http/http.dart';
 
@@ -108,6 +109,30 @@ class HttpService {
     // print(res.body);
     if (res.statusCode != 200) {
       throw Exception('Failed to post: $postBody to $restURL');
+    }
+  }
+
+  /*
+      Logging Http Requests
+  */
+  Future<List<Log>> getBackendLog({@required var restURL}) async {
+    Response res = await get("$ipUrl/$restURL");
+    if (res.statusCode == 200) {
+      List<Log> logData = [];
+      var body = jsonDecode(res.body);
+      body.forEach((var k) => logData.add(Log.fromTxt(k)));
+      return logData;
+    } else {
+      throw Exception("Failed to get log");
+    }
+  }
+
+  Future<bool> clearBackendLog({@required var restURL}) async {
+    Response res = await get("$ipUrl/$restURL");
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) == 'true' ? true : false;
+    } else {
+      throw Exception('Failed to clear log');
     }
   }
 }

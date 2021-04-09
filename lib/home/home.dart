@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hobby_hub_ui/services/logging/logMain.dart';
 import 'package:hobby_hub_ui/services/navigation/appBar.dart';
 import 'package:hobby_hub_ui/services/navigation/navDrawer.dart';
 
@@ -21,7 +22,6 @@ class _HomeState extends State<Home> {
           child: HHAppBar(title: 'Hobby Hub Home', scaffoldKey: _scaffoldKey)),
       body: Column(
         children: [
-          Center(child: Text("I am a Home Page")),
           Container(
             width: double.infinity,
             height: 300,
@@ -31,6 +31,8 @@ class _HomeState extends State<Home> {
               ),
             ),
           ),
+          SizedBox(height: 50,),
+          LogMain()
         ],
       ),
     );

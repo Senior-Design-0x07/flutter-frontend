@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:hobby_hub_ui/services/http_service.dart';
+import 'package:hobby_hub_ui/services/http/http_service.dart';
 import 'package:hobby_hub_ui/pin_manager/pin_mapping/pinMappingList.dart';
 import 'package:hobby_hub_ui/services/navigation/appBar.dart';
 import 'package:hobby_hub_ui/services/navigation/navDrawer.dart';
