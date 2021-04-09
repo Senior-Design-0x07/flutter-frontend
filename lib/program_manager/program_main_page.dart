@@ -50,13 +50,16 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
             child:
                 Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               Container(
-                height: 400,
+                height: 300,
                 width: double.infinity,
                 child: FutureBuilder(
                   future: HttpService.getProgramList(
                       restURL: 'api/program_manager/running_programs'),
                   builder: (BuildContext context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData) {
+                      // clear current list
+                      runningPrograms.clear();
+
                       // convert list of running programs into List<String>
                       String runningProgramsRaw = snapshot.data;
                       LineSplitter ls = new LineSplitter();
@@ -85,88 +88,96 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                         }
                       }
 
-                      return ListView(
-                        children: runningPrograms
-                            .map(
-                              (Program currentProgram) => ListTile(
-                                title: Text(currentProgram.fileName),
-                                subtitle: Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Text("Path: "),
-                                        Text(
-                                          currentProgram.filePath,
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                      ],
-                                    ),
-                                    Row(
-                                      children: [
-                                        Text("Process ID: "),
-                                        Text(
-                                          currentProgram.processID.toString(),
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                      if (runningPrograms.isNotEmpty) {
+                        return ListView(
+                          children: runningPrograms
+                              .map(
+                                (Program currentProgram) => ListTile(
+                                  title: Text(currentProgram.fileName),
+                                  subtitle: Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Text("Path: "),
+                                          Text(
+                                            currentProgram.filePath,
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        children: [
+                                          Text("Process ID: "),
+                                          Text(
+                                            currentProgram.processID.toString(),
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  onTap: () => showDialog(
+                                      context: context,
+                                      builder: (_) => AlertDialog(
+                                            title: Text("Program Commands"),
+                                            content: Text(
+                                                "What would you like to do with this program?"),
+                                            actions: [
+                                              FlatButton(
+                                                onPressed: () async {
+                                                  var output = await HttpService
+                                                      .postProgramCommand(
+                                                          restURL:
+                                                              'api/program_command',
+                                                          postBody: {
+                                                        "command":
+                                                            "pause_program",
+                                                        "program":
+                                                            currentProgram
+                                                                .fileName
+                                                      });
+                                                  setState(() {});
+                                                  Navigator.of(context).pop();
+                                                },
+                                                child: Text(("Pause")),
+                                              ),
+                                              // need file path for kill command
+                                              FlatButton(
+                                                onPressed: () async {
+                                                  var output = await HttpService
+                                                      .postProgramCommand(
+                                                          restURL:
+                                                              'api/program_command',
+                                                          postBody: {
+                                                        "command":
+                                                            "stop_program",
+                                                        "program":
+                                                            currentProgram
+                                                                .filePath
+                                                      });
+                                                  setState(() {});
+                                                  Navigator.of(context).pop();
+                                                },
+                                                child: Text(("Stop")),
+                                              ),
+                                              FlatButton(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                                child: Text(("Close Window")),
+                                              )
+                                            ],
+                                          ),
+                                      barrierDismissible: false),
                                 ),
-                                onTap: () => showDialog(
-                                    context: context,
-                                    builder: (_) => AlertDialog(
-                                          title: Text("Program Commands"),
-                                          content: Text(
-                                              "What would you like to do with this program?"),
-                                          actions: [
-                                            FlatButton(
-                                              onPressed: () async {
-                                                var output = await HttpService
-                                                    .postProgramCommand(
-                                                        restURL:
-                                                            'api/program_command',
-                                                        postBody: {
-                                                      "command":
-                                                          "pause_program",
-                                                      "program": currentProgram
-                                                          .fileName
-                                                    });
-                                                setState(() {});
-                                                Navigator.of(context).pop();
-                                              },
-                                              child: Text(("Pause")),
-                                            ),
-                                            FlatButton(
-                                              onPressed: () async {
-                                                var output = await HttpService
-                                                    .postProgramCommand(
-                                                        restURL:
-                                                            'api/program_command',
-                                                        postBody: {
-                                                      "command": "stop_program",
-                                                      "program": currentProgram
-                                                          .fileName
-                                                    });
-                                                setState(() {});
-                                                Navigator.of(context).pop();
-                                              },
-                                              child: Text(("Stop")),
-                                            ),
-                                            FlatButton(
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                              },
-                                              child: Text(("Close Window")),
-                                            )
-                                          ],
-                                        ),
-                                    barrierDismissible: false),
-                              ),
-                            )
-                            .toList(),
-                      );
+                              )
+                              .toList(),
+                        );
+                      } else {
+                        return Text("*** No Running Programs ***");
+                      }
                     }
                     return Column(
                       children: [
@@ -194,13 +205,16 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
             child:
                 Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               Container(
-                height: 400,
+                height: 300,
                 width: double.infinity,
                 child: FutureBuilder(
                   future: HttpService.getProgramList(
                       restURL: 'api/program_manager/paused_programs'),
                   builder: (BuildContext context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData) {
+                      // clear current list
+                      pausedPrograms.clear();
+
                       // convert list of running programs into List<String>
                       String pausedProgramsRaw = snapshot.data;
                       LineSplitter ls = new LineSplitter();
@@ -229,86 +243,96 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                         }
                       }
 
-                      return ListView(
-                        children: pausedPrograms
-                            .map(
-                              (Program currentProgram) => ListTile(
-                                title: Text(currentProgram.fileName),
-                                subtitle: Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Text("Path: "),
-                                        Text(
-                                          currentProgram.filePath,
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                      ],
-                                    ),
-                                    Row(
-                                      children: [
-                                        Text("Process ID: "),
-                                        Text(
-                                          currentProgram.processID.toString(),
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                      if (pausedPrograms.isNotEmpty) {
+                        return ListView(
+                          children: pausedPrograms
+                              .map(
+                                (Program currentProgram) => ListTile(
+                                  title: Text(currentProgram.fileName),
+                                  subtitle: Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Text("Path: "),
+                                          Text(
+                                            currentProgram.filePath,
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        children: [
+                                          Text("Process ID: "),
+                                          Text(
+                                            currentProgram.processID.toString(),
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  onTap: () => showDialog(
+                                      context: context,
+                                      builder: (_) => AlertDialog(
+                                            title: Text("Program Commands"),
+                                            content: Text(
+                                                "What would you like to do with this program?"),
+                                            actions: [
+                                              FlatButton(
+                                                onPressed: () async {
+                                                  var output = await HttpService
+                                                      .postProgramCommand(
+                                                          restURL:
+                                                              'api/program_command',
+                                                          postBody: {
+                                                        "command":
+                                                            "continue_program",
+                                                        "program":
+                                                            currentProgram
+                                                                .fileName
+                                                      });
+                                                  setState(() {});
+                                                  Navigator.of(context).pop();
+                                                },
+                                                child: Text(("Continue")),
+                                              ),
+                                              // need file path for kill command
+                                              FlatButton(
+                                                onPressed: () async {
+                                                  var output = await HttpService
+                                                      .postProgramCommand(
+                                                          restURL:
+                                                              'api/program_command',
+                                                          postBody: {
+                                                        "command":
+                                                            "stop_program",
+                                                        "program":
+                                                            currentProgram
+                                                                .filePath
+                                                      });
+                                                  setState(() {});
+                                                  Navigator.of(context).pop();
+                                                },
+                                                child: Text(("Stop")),
+                                              ),
+                                              FlatButton(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                                child: Text(("Close Window")),
+                                              )
+                                            ],
+                                          ),
+                                      barrierDismissible: false),
                                 ),
-                                onTap: () => showDialog(
-                                    context: context,
-                                    builder: (_) => AlertDialog(
-                                          title: Text("Program Commands"),
-                                          content: Text(
-                                              "What would you like to do with this program?"),
-                                          actions: [
-                                            FlatButton(
-                                              onPressed: () async {
-                                                var output = await HttpService
-                                                    .postProgramCommand(
-                                                        restURL:
-                                                            'api/program_command',
-                                                        postBody: {
-                                                      "command":
-                                                          "continue_program",
-                                                      "program": "light1.py"
-                                                    });
-                                                setState(() {});
-                                                Navigator.of(context).pop();
-                                              },
-                                              child: Text(("Continue")),
-                                            ),
-                                            FlatButton(
-                                              onPressed: () async {
-                                                var output = await HttpService
-                                                    .postProgramCommand(
-                                                        restURL:
-                                                            'api/program_command',
-                                                        postBody: {
-                                                      "command": "stop_program",
-                                                      "program": "light1.py"
-                                                    });
-                                                setState(() {});
-                                                Navigator.of(context).pop();
-                                              },
-                                              child: Text(("Stop")),
-                                            ),
-                                            FlatButton(
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                              },
-                                              child: Text(("Close Window")),
-                                            )
-                                          ],
-                                        ),
-                                    barrierDismissible: false),
-                              ),
-                            )
-                            .toList(),
-                      );
+                              )
+                              .toList(),
+                        );
+                      } else {
+                        return Text("*** No Running Programs ***");
+                      }
                     }
                     return Column(
                       children: [
@@ -327,6 +351,13 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
               ),
             ]),
           ),
+          Center(
+              child: FlatButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(("Home Page")),
+          )),
         ]),
       ),
     );
