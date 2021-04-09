@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:html';
-
 import 'package:flutter/material.dart';
 import 'package:hobby_hub_ui/services/http_service.dart';
 import 'package:hobby_hub_ui/services/navigation/appBar.dart';
