@@ -23,7 +23,6 @@ class HttpService {
 
   Future<String> getKnownNetworks({@required var restURL}) async {
     Response res = await get("$ipUrl/$restURL");
-    print(res.body);
     if (res.statusCode == 200) {
       return res.body;
     } else {
@@ -34,7 +33,6 @@ class HttpService {
   Future<String> postSelectedNetwork(
       {@required var restURL, @required dynamic postBody}) async {
     Response res = await post("$ipUrl/$restURL", body: postBody);
-    print(res.body);
     if (res.statusCode == 200) {
       return "What is up";
     } else {

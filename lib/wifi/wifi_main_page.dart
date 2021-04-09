@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:html';
+
 import 'package:flutter/material.dart';
 import 'package:hobby_hub_ui/services/http_service.dart';
 import 'package:hobby_hub_ui/services/navigation/appBar.dart';
@@ -24,7 +27,7 @@ class _WifiPageState extends State<WifiPage> {
       drawer: NavigationDrawer(),
       appBar: PreferredSize(
           preferredSize: const Size.fromHeight(60),
-          child: HHAppBar(title: 'Wifi', scaffoldKey: _scaffoldKey)),
+          child: HHAppBar(title: 'WiFi', scaffoldKey: _scaffoldKey)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(10.0),
@@ -43,7 +46,30 @@ class _WifiPageState extends State<WifiPage> {
                               builder: (BuildContext context,
                                   AsyncSnapshot snapshot) {
                                 if (snapshot.hasData) {
-                                  return Text(snapshot.data);
+                                  List<String> networkList =
+                                      snapshot.data.split('\',');
+                                  List badData = [];
+                                  for (int i = 0; i < networkList.length; i++) {
+                                    if (networkList[i].contains('x00')) {
+                                      badData.add(i);
+                                    }
+                                    networkList[i] =
+                                        networkList[i].replaceAll('"', '');
+                                    networkList[i] =
+                                        networkList[i].replaceAll('\'', '');
+                                  }
+                                  for (int i = badData.length - 1;
+                                      i >= 0;
+                                      i--) {
+                                    networkList.removeAt(badData[i]);
+                                  }
+                                  return ListView(
+                                      scrollDirection: Axis.vertical,
+                                      shrinkWrap: true,
+                                      children: networkList
+                                          .map((String network) =>
+                                              ListTile(title: Text(network)))
+                                          .toList());
                                 }
                                 return Column(
                                   children: [
