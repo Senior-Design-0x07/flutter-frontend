@@ -14,7 +14,7 @@ class _WifiPageState extends State<WifiPage> {
 
   String ssid = "";
   String password = "";
-  bool buttonPressed = false;
+  bool scanBtn = false;
 
   @override
   Widget build(BuildContext context) {
@@ -36,10 +36,10 @@ class _WifiPageState extends State<WifiPage> {
                     Container(
                       height: 400,
                       width: double.infinity,
-                      child: buttonPressed
+                      child: scanBtn
                           ? FutureBuilder(
                               future: http.getKnownNetworks(
-                                  restURL: 'api/wifi_request'),
+                                  restURL: 'api/wifi_request', cmd: 'scan'),
                               builder: (BuildContext context,
                                   AsyncSnapshot snapshot) {
                                 if (snapshot.hasData) {
@@ -129,7 +129,7 @@ class _WifiPageState extends State<WifiPage> {
                   new Container(
                     child: RaisedButton(
                       onPressed: () {
-                        buttonPressed = true;
+                        scanBtn = true;
                         setState(() {});
                       },
                       child: Text('Scan'),
@@ -146,6 +146,15 @@ class _WifiPageState extends State<WifiPage> {
                       child: Text('Connect'),
                     ),
                   ),
+                  new Container(
+                    child: RaisedButton(
+                      onPressed: () async {
+                        await http.getClearNetwork(
+                            restURL: 'api/wifi_request', cmd: 'clear');
+                      },
+                      child: Text('Clear Saved Network'),
+                    ),
+                  )
                 ],
               ),
             ],

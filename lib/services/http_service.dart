@@ -73,9 +73,9 @@ class HttpService {
   /*
       Wifi Http Requests
   */
-  Future<String> getKnownNetworks({@required var restURL}) async {
-    Response res = await get("$ipUrl/$restURL");
-    print(res.body);
+  Future<String> getKnownNetworks(
+      {@required var restURL, @required var cmd}) async {
+    Response res = await get("$ipUrl/$restURL/$cmd");
     if (res.statusCode == 200) {
       return res.body;
     } else {
@@ -83,12 +83,23 @@ class HttpService {
     }
   }
 
-  Future<void> postSelectedNetwork(
+  Future<String> postSelectedNetwork(
       {@required var restURL, @required dynamic postBody}) async {
     Response res = await post("$ipUrl/$restURL", body: postBody);
-    // print(res.body);
-    if (res.statusCode != 200) {
+    if (res.statusCode == 200) {
+      return "What is up";
+    } else {
       throw Exception('Failed to post: $postBody to $restURL');
+    }
+  }
+
+  Future<String> getClearNetwork(
+      {@required var restURL, @required var cmd}) async {
+    Response res = await get("$ipUrl/$restURL/$cmd");
+    if (res.statusCode == 200) {
+      return res.body;
+    } else {
+      throw Exception('Failed to grab Pin Data');
     }
   }
 }
