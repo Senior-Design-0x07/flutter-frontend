@@ -42,15 +42,25 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
       body: SafeArea(
         child: Column(children: [
           Text(
-            "Running Programs",
-            style: TextStyle(fontWeight: FontWeight.bold),
+            'Running Programs',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              color: Colors.black,
+            ),
+          ),
+          const Divider(
+            height: 10,
+            thickness: 5,
+            indent: 20,
+            endIndent: 20,
           ),
           SingleChildScrollView(
             padding: EdgeInsets.all(10.0),
             child:
                 Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               Container(
-                height: 300,
+                height: 280,
                 width: double.infinity,
                 child: FutureBuilder(
                   future: HttpService.getProgramList(
@@ -176,7 +186,24 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                               .toList(),
                         );
                       } else {
-                        return Text("*** No Running Programs ***");
+                        // running programs lists is empty, display to user
+                        return Row(
+                          children: [
+                            Icon(
+                              Icons.info,
+                              color: Colors.green,
+                              size: 30.0,
+                            ),
+                            Text(
+                              "NO RUNNING PROGRAMS",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        );
                       }
                     }
                     return Column(
@@ -197,8 +224,18 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
             ]),
           ),
           Text(
-            "Paused Programs",
-            style: TextStyle(fontWeight: FontWeight.bold),
+            'Paused Programs',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              color: Colors.black,
+            ),
+          ),
+          const Divider(
+            height: 10,
+            thickness: 5,
+            indent: 20,
+            endIndent: 20,
           ),
           SingleChildScrollView(
             padding: EdgeInsets.all(10.0),
@@ -331,7 +368,24 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                               .toList(),
                         );
                       } else {
-                        return Text("*** No Running Programs ***");
+                        // paused programs lists is empty, display to user
+                        return Row(
+                          children: [
+                            Icon(
+                              Icons.info,
+                              color: Colors.green,
+                              size: 30.0,
+                            ),
+                            Text(
+                              "NO PAUSED PROGRAMS",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        );
                       }
                     }
                     return Column(
@@ -356,6 +410,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
             onPressed: () {
               Navigator.of(context).pop();
             },
+            color: Colors.grey[300],
             child: Text(("Home Page")),
           )),
         ]),
