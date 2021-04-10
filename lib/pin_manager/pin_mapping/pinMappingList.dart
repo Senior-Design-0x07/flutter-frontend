@@ -120,10 +120,11 @@ class _PinMappingState extends State<PinMapping> {
     return http
         .getPinList(restURL: 'api/pin_manager/grab_used_pins')
         .then((_mappedPins) {
-      setState(() {
-        connection = true;
-        mappedPins = _mappedPins;
-      });
+      connection = true;
+      if (_mappedPins.isNotEmpty)
+        setState(() {
+          mappedPins = _mappedPins;
+        });
     }).catchError((Object error) {
       _handleErrors(error);
     });

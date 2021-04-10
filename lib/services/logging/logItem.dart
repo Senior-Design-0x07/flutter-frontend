@@ -6,18 +6,8 @@ class LogItem extends StatelessWidget {
 
   LogItem({@required this.log});
 
-  String _getTime() {
-    List<String> times = DateTime.now().toString().split(" ");
-    List<String> days = times[0].split("-");
-    String day = days[1] + "-" + days[2];
-    String time = times[1].split(".")[0];
-
-    return day + " " + time + ": ";
-  }
-
   @override
   Widget build(BuildContext context) {
-    _getTime();
     return Container(
       margin: const EdgeInsets.all(2.0),
       padding: const EdgeInsets.all(2.0),
@@ -30,7 +20,7 @@ class LogItem extends StatelessWidget {
             child: Align(
                 alignment: Alignment.centerRight,
                 child: Text(
-                  _getTime(),
+                  log.timeStamp,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 )),
           ),

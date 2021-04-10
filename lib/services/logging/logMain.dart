@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:hobby_hub_ui/services/error/error_service.dart';
 import 'package:hobby_hub_ui/services/http/http_service.dart';
 import 'package:hobby_hub_ui/models/log.dart';
 import 'logItem.dart';
@@ -8,26 +10,83 @@ class LogMain extends StatefulWidget {
   _LogMainState createState() => _LogMainState();
 }
 
-// import 'dart:async';
-// main() {
-//   const oneSec = const Duration(seconds:1);
-//   new Timer.periodic(oneSec, (Timer t) => print('hi!'));
-// }
 class _LogMainState extends State<LogMain> {
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
       new GlobalKey<RefreshIndicatorState>();
   final HttpService http = HttpService();
   List<Log> logData = [];
-  bool cmdSuccess = false;
+  bool cmdSuccess = true;
+  bool clearButton = false;
+  bool connection = false;
+  List<String> connectionError;
+  String httpServiceError;
+
+  void _grabLogPeriodically(int numSeconds) {
+    Timer.periodic(Duration(seconds: numSeconds), (Timer t) => _refresh());
+  }
+
+  Widget _showConnectionErrors() {
+    switch (connectionError[0]) {
+      case 'Timeout':
+        return HHError(
+            title: connectionError[0] + " Exception",
+            message: "Can't Connect",
+            type: 0);
+      default:
+        return HHError(
+            title: "Exception",
+            message: "A connection error has ocurred",
+            type: 0);
+    }
+  }
+
+  Widget _showHttpServiceErrors() {
+    switch (httpServiceError.split(":")[0]) {
+      case 'Exception': //Generic Exceptions from HTTP_SERVICE
+        return HHError(
+            title: httpServiceError.split(":")[0],
+            message: httpServiceError.split("Exception: ")[1],
+            type: 0);
+      default:
+        return HHError(
+            title: "Exception", message: "An error has ocurred", type: 0);
+    }
+  }
+
+  Widget _showClearLogError() {
+    cmdSuccess = true;
+    return HHError(
+        title: 'Clear Log', message: 'Log could not be cleared', type: 1);
+  }
+
+  void _handleErrors(Object error) {
+    setState(() {
+      error.toString().split("Exception")[0] == "Timeout"
+          ? connection = false
+          : connection = true;
+      error.toString().split("Exception")[0] != ""
+          ? this.connectionError = error.toString().split("Exception")
+          : this.httpServiceError = error.toString();
+    });
+  }
 
   Future<void> _refresh() {
     return http.getBackendLog(restURL: 'api/logging/get').then((_logData) {
-      setState(() {
-        // connection = true;
-        logData = _logData;
-      });
+      connection = true;
+      if (!clearButton) {
+        if (_logData.isNotEmpty) {
+          setState(() {
+            logData = _logData;
+          });
+        }
+      } else {
+        setState(() {
+          logData.clear();
+          clearButton = false;
+        });
+      }
     }).catchError((Object error) {
-      // _handleErrors(error);
+      _handleErrors(error);
     });
   }
 
@@ -41,6 +100,7 @@ class _LogMainState extends State<LogMain> {
 
   @override
   Widget build(BuildContext context) {
+    if (connection) _grabLogPeriodically(30);
     return Container(
       margin: const EdgeInsets.all(3.0),
       padding: const EdgeInsets.all(1.0),
@@ -79,12 +139,16 @@ class _LogMainState extends State<LogMain> {
                             ),
                             tooltip: 'Clear Log',
                             onPressed: () async {
-                              cmdSuccess = await http
-                                  .clearBackendLog(restURL: "api/logging/clear")
-                                  .catchError((Object user) {
-                                // _handleErrors();
-                              });
-                              _refresh();
+                              clearButton = true;
+                              if (connection) {
+                                cmdSuccess = await http
+                                    .clearBackendLog(
+                                        restURL: "api/logging/clear")
+                                    .catchError((Object error) {
+                                  _handleErrors(error);
+                                });
+                                _refresh();
+                              }
                             }),
                         IconButton(
                             iconSize: 30.0,
@@ -95,6 +159,8 @@ class _LogMainState extends State<LogMain> {
                             ),
                             tooltip: 'Refresh',
                             onPressed: () {
+                              clearButton = false;
+                              cmdSuccess = true;
                               _refreshIndicatorKey.currentState.show();
                             }),
                       ]),
@@ -102,6 +168,11 @@ class _LogMainState extends State<LogMain> {
                   ],
                 ),
               ),
+              if (!connection && connectionError != null)
+                _showConnectionErrors(), // Connection Errors
+              if (httpServiceError != null)
+                _showHttpServiceErrors(), //Http Service Errors
+              if (!cmdSuccess) _showClearLogError(),
               Expanded(
                 child: Card(
                   child: RefreshIndicator(

@@ -116,7 +116,9 @@ class HttpService {
       Logging Http Requests
   */
   Future<List<Log>> getBackendLog({@required var restURL}) async {
-    Response res = await get("$ipUrl/$restURL");
+    Response res = await get("$ipUrl/$restURL")
+        .catchError((e) {}) // This catches the SocketException and does nothing
+        .timeout(Duration(seconds: 5));
     if (res.statusCode == 200) {
       List<Log> logData = [];
       var body = jsonDecode(res.body);
@@ -128,7 +130,9 @@ class HttpService {
   }
 
   Future<bool> clearBackendLog({@required var restURL}) async {
-    Response res = await get("$ipUrl/$restURL");
+    Response res = await get("$ipUrl/$restURL")
+        .catchError((e) {}) // This catches the SocketException and does nothing
+        .timeout(Duration(seconds: 5));
     if (res.statusCode == 200) {
       return jsonDecode(res.body) == 'true' ? true : false;
     } else {
