@@ -4,6 +4,7 @@ import 'package:hobby_hub_ui/services/error/error_service.dart';
 import 'package:hobby_hub_ui/services/http/http_service.dart';
 import 'package:hobby_hub_ui/models/log.dart';
 import 'logItem.dart';
+import 'package:hobby_hub_ui/services/navigation/routes.dart' as router;
 
 class LogMain extends StatefulWidget {
   @override
@@ -17,12 +18,19 @@ class _LogMainState extends State<LogMain> {
   List<Log> logData = [];
   bool cmdSuccess = true;
   bool clearButton = false;
-  bool connection = false;
+  bool connection = true;
   List<String> connectionError;
   String httpServiceError;
+  Timer _timer;
 
   void _grabLogPeriodically(int numSeconds) {
-    Timer.periodic(Duration(seconds: numSeconds), (Timer t) => _refresh());
+    if (_timer == null || !_timer.isActive) {
+      _timer = Timer.periodic(Duration(seconds: numSeconds), (Timer t) {
+        if (router.routeSettings.name == router.HomeRoute) {
+          _refresh();
+        }
+      });
+    }
   }
 
   Widget _showConnectionErrors() {
@@ -60,14 +68,15 @@ class _LogMainState extends State<LogMain> {
   }
 
   void _handleErrors(Object error) {
-    setState(() {
-      error.toString().split("Exception")[0] == "Timeout"
-          ? connection = false
-          : connection = true;
-      error.toString().split("Exception")[0] != ""
-          ? this.connectionError = error.toString().split("Exception")
-          : this.httpServiceError = error.toString();
-    });
+    if (connection || httpServiceError != null || !cmdSuccess)
+      setState(() {
+        error.toString().split("Exception")[0] == "Timeout"
+            ? connection = false
+            : connection = true;
+        error.toString().split("Exception")[0] != ""
+            ? this.connectionError = error.toString().split("Exception")
+            : this.httpServiceError = error.toString();
+      });
   }
 
   Future<void> _refresh() {
@@ -168,8 +177,7 @@ class _LogMainState extends State<LogMain> {
                   ],
                 ),
               ),
-              if (!connection && connectionError != null)
-                _showConnectionErrors(), // Connection Errors
+              if (!connection) _showConnectionErrors(), // Connection Errors
               if (httpServiceError != null)
                 _showHttpServiceErrors(), //Http Service Errors
               if (!cmdSuccess) _showClearLogError(),

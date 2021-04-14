@@ -14,12 +14,12 @@ class UndefinedRoute extends StatelessWidget {
           child: Column(
             children: [
               SizedBox(height: 300),
-              Text('ERROR for $name is not defined bro!'),
+              Text('ERROR for route: $name '),
               SizedBox(height: 15),
               FlatButton(
                   onPressed: () async {
                     Navigator.pushReplacementNamed(
-                        context, router.ProgramManagerRoute);
+                        context, router.HomeRoute);
                   },
                   child: Text("Home Page"))
             ],

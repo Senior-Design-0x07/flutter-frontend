@@ -4,8 +4,6 @@ import 'package:hobby_hub_ui/pin_manager/pin_mapping/pinOutputResponse.dart';
 import 'package:hobby_hub_ui/services/error/error_service.dart';
 import 'package:hobby_hub_ui/services/http/http_service.dart';
 
-import 'mapped_pin.dart';
-
 class PinMapping extends StatefulWidget {
   @override
   _PinMappingState createState() => _PinMappingState();
@@ -18,9 +16,12 @@ class _PinMappingState extends State<PinMapping> {
 
   final HttpService http = HttpService();
   final List<String> _pinOptions = ["GPIO", "PWM", "I2C", "ANALOG", "SPECIAL"];
-  String _pinType;
+  List<Map<int, String>> tempStorage = [];
+  Map<int, List<String>> _physicalPinOptions = {};
   List<Pin> mappedPins = [];
+  String _pinType;
   Pin selectedPin;
+  String _newPhysicalPin = "";
   String pinNameValue = "";
   int buttonSelected = 0;
   bool cmdSuccess = false;
@@ -99,20 +100,20 @@ class _PinMappingState extends State<PinMapping> {
     );
   }
 
-  _selectPinType() {
+  String _selectPinType() {
     switch (_pinType) {
       case "GPIO":
-        return 1;
+        return '1';
       case "PWM":
-        return 2;
+        return '2';
       case "I2C":
-        return 3;
+        return '3';
       case "ANALOG":
-        return 4;
+        return '4';
       case "SPECIAL":
-        return 5;
+        return '5';
       default: //Default to GPIO
-        return 1;
+        return '1';
     }
   }
 
@@ -121,7 +122,7 @@ class _PinMappingState extends State<PinMapping> {
         .getPinList(restURL: 'api/pin_manager/grab_used_pins')
         .then((_mappedPins) {
       connection = true;
-      if (_mappedPins.isNotEmpty)
+      if (_mappedPins.isNotEmpty || buttonSelected == 4)
         setState(() {
           mappedPins = _mappedPins;
         });
@@ -130,12 +131,63 @@ class _PinMappingState extends State<PinMapping> {
     });
   }
 
+  _arrangePhysicalPins() {
+    List<String> list1 = List<String>();
+    List<String> list2 = List<String>();
+    List<String> list3 = List<String>();
+    List<String> list4 = List<String>();
+    List<String> list5 = List<String>();
+    List<String> list6 = List<String>();
+
+    for (var i = 0; i < tempStorage.length; i++) {
+      tempStorage[i].forEach((pinType, pinName) {
+        switch (pinType) {
+          case 1:
+            list1.add(pinName);
+            break;
+          case 2:
+            list2.add(pinName);
+            break;
+          case 3:
+            list3.add(pinName);
+            break;
+          case 4:
+            list4.add(pinName);
+            break;
+          case 5:
+            list5.add(pinName);
+            break;
+          default:
+            list6.add(pinName);
+            break;
+        }
+      });
+    }
+    _physicalPinOptions[1] = list1;
+    _physicalPinOptions[2] = list2;
+    _physicalPinOptions[3] = list3;
+    _physicalPinOptions[4] = list4;
+    _physicalPinOptions[5] = list5;
+    _physicalPinOptions[null] = list6;
+  }
+
+  _getPhysicalPins() async {
+    if (_physicalPinOptions != {})
+      tempStorage = await http
+          .getPhysicalPins(restURL: 'api/pin_manager/grab_physical_pins')
+          .catchError((Object error) {
+        _handleErrors(error);
+      });
+    _arrangePhysicalPins();
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refreshIndicatorKey.currentState.show();
     });
+    _getPhysicalPins();
   }
 
   @override
@@ -145,11 +197,9 @@ class _PinMappingState extends State<PinMapping> {
         children: [
           if (!connection && connectionError != null)
             _showConnectionErrors(), // Connection Errors
-          if (pinNameValue == "" &&
-              httpServiceError != null &&
-              buttonSelected != 0)
+          if (httpServiceError != null && buttonSelected != 0)
             _showHttpServiceErrors(),
-          if (!cmdSuccess && buttonSelected != 0)
+          if (!cmdSuccess && buttonSelected != 0 && httpServiceError != null)
             _showButtonErrors(), //Button Errors
           Card(
             color: Colors.grey[200],
@@ -216,12 +266,15 @@ class _PinMappingState extends State<PinMapping> {
                                   FlatButton(
                                       onPressed: () async {
                                         Navigator.of(context).pop();
-                                        cmdSuccess = await http
-                                            .requestNewPin(
-                                                restURL: 'api/pins/request_pin',
-                                                pinName: pinNameValue,
-                                                pinType: _selectPinType())
-                                            .catchError((Object error) {
+                                        httpServiceError = null;
+                                        cmdSuccess = await http.requestNewPin(
+                                          restURL:
+                                              'api/pin_manager/request_pin',
+                                          postBody: {
+                                            "pin_name": pinNameValue,
+                                            "pin_type": _selectPinType()
+                                          },
+                                        ).catchError((Object error) {
                                           _handleErrors(error);
                                         });
                                         //Get rid of null
@@ -232,6 +285,11 @@ class _PinMappingState extends State<PinMapping> {
                                         _refresh();
                                       },
                                       child: Text('Add')),
+                                  FlatButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: Text('Dismiss')),
                                 ],
                               ),
                           barrierDismissible: true);
@@ -262,12 +320,13 @@ class _PinMappingState extends State<PinMapping> {
                                   FlatButton(
                                       onPressed: () async {
                                         Navigator.of(context).pop();
+                                        httpServiceError = null;
                                         selectedPin = null;
-                                        selectedPin = await http
-                                            .getPin(
-                                                restURL: 'api/pins/get_pin',
-                                                pinName: pinNameValue)
-                                            .catchError((Object error) {
+                                        selectedPin = await http.getPin(
+                                            restURL: 'api/pin_manager/get_pin',
+                                            postBody: {
+                                              "pin_name": pinNameValue
+                                            }).catchError((Object error) {
                                           _handleErrors(error);
                                         });
                                         selectedPin != null
@@ -276,7 +335,12 @@ class _PinMappingState extends State<PinMapping> {
                                         buttonSelected = 2;
                                         _refresh();
                                       },
-                                      child: Text('Request')),
+                                      child: Text('Search')),
+                                  FlatButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: Text('Dismiss')),
                                 ],
                               ),
                           barrierDismissible: true);
@@ -299,6 +363,7 @@ class _PinMappingState extends State<PinMapping> {
                     tooltip: 'Clear Unused Pins',
                     onPressed: () async {
                       if (mappedPins.isNotEmpty) {
+                        httpServiceError = null;
                         cmdSuccess = await http
                             .clearUnusedPins(
                                 restURL: 'api/pin_manager/clear_unused')
@@ -328,6 +393,7 @@ class _PinMappingState extends State<PinMapping> {
                     ),
                     tooltip: 'Reset All Pins',
                     onPressed: () async {
+                      httpServiceError = null;
                       cmdSuccess = await http
                           .resetPinConfig(
                               restURL: 'api/pin_manager/reset_config')
@@ -374,8 +440,127 @@ class _PinMappingState extends State<PinMapping> {
                             scrollDirection: Axis.vertical,
                             shrinkWrap: true,
                             children: mappedPins
-                                .map((Pin pin) => MappedPin(
-                                      mappedPin: pin,
+                                .map((Pin mappedPin) => ListTile(
+                                      title: Text(mappedPin.namedPin),
+                                      subtitle: Row(
+                                        children: [
+                                          Text("Pin: "),
+                                          Text(
+                                            mappedPin.pin,
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          Text("  Type: "),
+                                          Text(
+                                            mappedPin.type.toString(),
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          Text("  In Use: "),
+                                          Text(
+                                            mappedPin.inUse.toString(),
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                      onTap: () => showDialog(
+                                          context: context,
+                                          builder: (_) => AlertDialog(
+                                                title: Text("Pin Info"),
+                                                content: Text(
+                                                    "Are these settings correct?"),
+                                                actions: [
+                                                  FlatButton(
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                        showDialog(
+                                                            context: context,
+                                                            builder:
+                                                                (_) =>
+                                                                    AlertDialog(
+                                                                      title: Text(
+                                                                          "Update Pin"),
+                                                                      content:
+                                                                          SingleChildScrollView(
+                                                                        child:
+                                                                            Column(
+                                                                          children: [
+                                                                            Align(
+                                                                              alignment: Alignment.centerLeft,
+                                                                              child: Text.rich(
+                                                                                TextSpan(text: 'Change Pin ', children: <InlineSpan>[
+                                                                                  TextSpan(
+                                                                                    text: "' " + mappedPin.namedPin + " '",
+                                                                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                                                                  ),
+                                                                                  TextSpan(
+                                                                                    text: " to type: ",
+                                                                                    style: TextStyle(fontWeight: FontWeight.normal),
+                                                                                  )
+                                                                                ]),
+                                                                              ),
+                                                                            ),
+                                                                            SizedBox(height: 5),
+                                                                            StatefulBuilder(builder:
+                                                                                (BuildContext context, StateSetter dropDownState) {
+                                                                              return DropdownButton(
+                                                                                icon: const Icon(
+                                                                                  Icons.push_pin_sharp,
+                                                                                  color: Colors.green,
+                                                                                  size: 30.0,
+                                                                                ),
+                                                                                isExpanded: true,
+                                                                                hint: Text("Select Pin Type..."),
+                                                                                items: _physicalPinOptions.isNotEmpty ? _physicalPinOptions[mappedPin.type].map((String thing) => DropdownMenuItem<String>(child: Text(thing), value: thing)).toList() : null,
+                                                                                onChanged: (String value) {
+                                                                                  dropDownState(() {
+                                                                                    _newPhysicalPin = value;
+                                                                                  });
+                                                                                },
+                                                                                value: _newPhysicalPin,
+                                                                              );
+                                                                            }),
+                                                                          ],
+                                                                        ),
+                                                                      ),
+                                                                      actions: [
+                                                                        FlatButton(
+                                                                            onPressed:
+                                                                                () async {
+                                                                              Navigator.of(context).pop();
+                                                                              cmdSuccess = await http.updatePin(restURL: 'api/pin_manager/update_pin', postBody: {
+                                                                                'pin_name': mappedPin.namedPin,
+                                                                                'new_physical_pin': _newPhysicalPin
+                                                                              }).catchError((Object error) {
+                                                                                _handleErrors(error);
+                                                                              });
+                                                                            },
+                                                                            child:
+                                                                                Text("Update")),
+                                                                        FlatButton(
+                                                                            onPressed:
+                                                                                () async {
+                                                                              Navigator.of(context).pop();
+                                                                            },
+                                                                            child:
+                                                                                Text("Dismiss")),
+                                                                      ],
+                                                                    ),
+                                                            barrierDismissible:
+                                                                true);
+                                                      },
+                                                      child: Text('Change')),
+                                                  FlatButton(
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                      child: Text('Dismiss')),
+                                                ],
+                                              ),
+                                          barrierDismissible: true),
                                     ))
                                 .toList(),
                           )
@@ -388,12 +573,11 @@ class _PinMappingState extends State<PinMapping> {
           SizedBox(
             height: 10,
           ),
-          cmdSuccess
-              ? PinOutputResponse(
-                  type: buttonSelected,
-                  pin: selectedPin,
-                )
-              : Column() //Dummy Widget, Handled with error widget above
+          if (cmdSuccess)
+            PinOutputResponse(
+              type: buttonSelected,
+              pin: selectedPin,
+            ),
         ],
       ),
     );

@@ -17,7 +17,7 @@ class HttpService {
   */
   Future<List<Pin>> getPinList({@required var restURL}) async {
     Response res = await get("$ipUrl/$restURL")
-        .catchError((e) {}) // Catches SocketException
+        .catchError((e) {})
         .timeout(Duration(seconds: 5));
     if (res.statusCode == 200) {
       List<Pin> pinData = [];
@@ -29,48 +29,89 @@ class HttpService {
     }
   }
 
+  Future<List<Map<int, String>>> getPhysicalPins(
+      {@required var restURL}) async {
+    Response res = await get("$ipUrl/$restURL")
+        .catchError((e) {})
+        .timeout(Duration(seconds: 5));
+    if (res.statusCode == 200) {
+      List<dynamic> physicalPins = jsonDecode(res.body);
+      List<Map<int, String>> arrangedPhysicalPins = [];
+      // Arranging data for how I want it
+      for (var i = 0; i < physicalPins.length; i++) {
+        try {
+          arrangedPhysicalPins.add({physicalPins[i][2]: physicalPins[i][0]});
+        } catch (e) {
+          arrangedPhysicalPins.add({null: physicalPins[i][0]});
+        }
+      }
+      return arrangedPhysicalPins;
+    } else {
+      throw Exception('Error with physical pin list');
+    }
+  }
+
   // Should be Future<Pin>? I think
   // Tried to replicate "Key Error" on backend for request_pin, could not do it
   Future<bool> requestNewPin(
-      {@required var restURL,
-      @required String pinName,
-      @required int pinType}) async {
+      {@required var restURL, @required Map<String, dynamic> postBody}) async {
+    var pinName = postBody.values.toList()[0];
     if (pinName != "") {
-      Response res = await get("$ipUrl/$restURL/$pinName/$pinType")
-          .catchError(
-              (e) {}) // This catches the SocketException and does nothing
+      Response res = await post("$ipUrl/$restURL", body: postBody)
+          .catchError((e) {})
           .timeout(Duration(seconds: 5));
       if (res.statusCode == 200) {
         return jsonDecode(res.body) == 'true' ? true : false;
       } else {
-        throw Exception('Failed to request pin: ' + pinName);
+        throw Exception("Failed to request pin: ' " + pinName + " '");
       }
     } else {
       throw Exception('Please enter a valid pin name');
     }
   }
 
-  Future<Pin> getPin({@required var restURL, @required String pinName}) async {
-    Response res = await get("$ipUrl/$restURL/$pinName/0")
-        .catchError((e) {}) // This catches the SocketException and does nothing
-        .timeout(Duration(seconds: 5));
+  Future<Pin> getPin(
+      {@required var restURL, @required Map<String, dynamic> postBody}) async {
+    var pinName = postBody.values.toList()[0];
     if (pinName != "") {
+      Response res = await post("$ipUrl/$restURL", body: postBody)
+          .catchError((e) {})
+          .timeout(Duration(seconds: 5));
       if (res.statusCode == 200) {
+        print(postBody[0]);
         return json.decode(res.body) != null
             ? Pin.fromJson(pinName, jsonDecode(res.body))
-            : null;
+            : throw Exception("Failed to grab pin: ' " + pinName + " '");
       } else {
-        throw Exception('Failed to grab pin: ' + pinName);
+        throw Exception("Failed to grab pin: ' " + pinName + " '");
       }
     } else {
       throw Exception('Please enter a valid pin name');
+    }
+  }
+
+  Future<bool> updatePin(
+      {@required var restURL, @required Map<String, dynamic> postBody}) async {
+    var pinName = postBody.values.toList()[0];
+    var newPhysicalPin = postBody.values.toList()[1];
+    if (newPhysicalPin != null) {
+      Response res = await post("$ipUrl/$restURL", body: postBody)
+          .catchError((e) {})
+          .timeout(Duration(seconds: 5));
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body) == 'true' ? true : false;
+      } else {
+        throw Exception("Failed to update pin ' " + pinName + " '");
+      }
+    } else {
+      throw Exception('Please select a physical pin');
     }
   }
 
   // Not Implemented properly yet with Rock
   Future<bool> clearUnusedPins({@required var restURL}) async {
     Response res = await get("$ipUrl/$restURL")
-        .catchError((e) {}) // This catches the SocketException and does nothing
+        .catchError((e) {})
         .timeout(Duration(seconds: 5));
     if (res.statusCode == 200) {
       return jsonDecode(res.body) == 'true' ? true : false;
@@ -81,7 +122,7 @@ class HttpService {
 
   Future<bool> resetPinConfig({@required var restURL}) async {
     Response res = await get("$ipUrl/$restURL")
-        .catchError((e) {}) // This catches the SocketException and does nothing
+        .catchError((e) {})
         .timeout(Duration(seconds: 5));
     if (res.statusCode == 200) {
       return jsonDecode(res.body) == 'true' ? true : false;
@@ -117,7 +158,7 @@ class HttpService {
   */
   Future<List<Log>> getBackendLog({@required var restURL}) async {
     Response res = await get("$ipUrl/$restURL")
-        .catchError((e) {}) // This catches the SocketException and does nothing
+        .catchError((e) {})
         .timeout(Duration(seconds: 5));
     if (res.statusCode == 200) {
       List<Log> logData = [];
@@ -131,7 +172,7 @@ class HttpService {
 
   Future<bool> clearBackendLog({@required var restURL}) async {
     Response res = await get("$ipUrl/$restURL")
-        .catchError((e) {}) // This catches the SocketException and does nothing
+        .catchError((e) {})
         .timeout(Duration(seconds: 5));
     if (res.statusCode == 200) {
       return jsonDecode(res.body) == 'true' ? true : false;
