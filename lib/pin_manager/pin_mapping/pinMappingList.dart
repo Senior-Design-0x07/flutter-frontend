@@ -131,13 +131,13 @@ class _PinMappingState extends State<PinMapping> {
     });
   }
 
-  _arrangePhysicalPins() {
-    List<String> list1 = List<String>();
-    List<String> list2 = List<String>();
-    List<String> list3 = List<String>();
-    List<String> list4 = List<String>();
-    List<String> list5 = List<String>();
-    List<String> list6 = List<String>();
+  void _arrangePhysicalPins() {
+    List<String> list1 = List<String>.empty(growable: true);
+    List<String> list2 = List<String>.empty(growable: true);
+    List<String> list3 = List<String>.empty(growable: true);
+    List<String> list4 = List<String>.empty(growable: true);
+    List<String> list5 = List<String>.empty(growable: true);
+    List<String> list6 = List<String>.empty(growable: true);
 
     for (var i = 0; i < tempStorage.length; i++) {
       tempStorage[i].forEach((pinType, pinName) {
@@ -171,7 +171,7 @@ class _PinMappingState extends State<PinMapping> {
     _physicalPinOptions[null] = list6;
   }
 
-  _getPhysicalPins() async {
+  void _getPhysicalPins() async {
     if (_physicalPinOptions != {})
       tempStorage = await http
           .getPhysicalPins(restURL: 'api/pin_manager/grab_physical_pins')
@@ -475,6 +475,8 @@ class _PinMappingState extends State<PinMapping> {
                                                       onPressed: () {
                                                         Navigator.of(context)
                                                             .pop();
+                                                        _newPhysicalPin =
+                                                            mappedPin.pin;
                                                         showDialog(
                                                             context: context,
                                                             builder:
@@ -513,7 +515,7 @@ class _PinMappingState extends State<PinMapping> {
                                                                                 ),
                                                                                 isExpanded: true,
                                                                                 hint: Text("Select Pin Type..."),
-                                                                                items: _physicalPinOptions.isNotEmpty ? _physicalPinOptions[mappedPin.type].map((String thing) => DropdownMenuItem<String>(child: Text(thing), value: thing)).toList() : null,
+                                                                                items: _physicalPinOptions[mappedPin.type].map((String thing) => DropdownMenuItem<String>(child: Text(thing), value: thing)).toList(),
                                                                                 onChanged: (String value) {
                                                                                   dropDownState(() {
                                                                                     _newPhysicalPin = value;
@@ -536,6 +538,7 @@ class _PinMappingState extends State<PinMapping> {
                                                                               }).catchError((Object error) {
                                                                                 _handleErrors(error);
                                                                               });
+                                                                              _refresh();
                                                                             },
                                                                             child:
                                                                                 Text("Update")),

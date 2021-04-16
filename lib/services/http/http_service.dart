@@ -37,7 +37,6 @@ class HttpService {
     if (res.statusCode == 200) {
       List<dynamic> physicalPins = jsonDecode(res.body);
       List<Map<int, String>> arrangedPhysicalPins = [];
-      // Arranging data for how I want it
       for (var i = 0; i < physicalPins.length; i++) {
         try {
           arrangedPhysicalPins.add({physicalPins[i][2]: physicalPins[i][0]});
@@ -51,8 +50,8 @@ class HttpService {
     }
   }
 
-  // Should be Future<Pin>? I think
-  // Tried to replicate "Key Error" on backend for request_pin, could not do it
+  // Should be Future<Pin> Eventually
+  // It's bugged on backend, with Analog and i2c pins...
   Future<bool> requestNewPin(
       {@required var restURL, @required Map<String, dynamic> postBody}) async {
     var pinName = postBody.values.toList()[0];
@@ -108,7 +107,7 @@ class HttpService {
     }
   }
 
-  // Not Implemented properly yet with Rock
+  // Probably won't need this? but here for now
   Future<bool> clearUnusedPins({@required var restURL}) async {
     Response res = await get("$ipUrl/$restURL")
         .catchError((e) {})
