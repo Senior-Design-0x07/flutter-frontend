@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hobby_hub_ui/http/http_service.dart';
+import 'package:hobby_hub_ui/services/http/http_service.dart';
 import 'package:hobby_hub_ui/services/navigation/appBar.dart';
 import 'package:hobby_hub_ui/services/navigation/navDrawer.dart';
 

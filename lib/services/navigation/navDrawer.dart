@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hobby_hub_ui/services/navigation/routes.dart' as router;
 
-
 class NavigationDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -25,7 +24,8 @@ class NavigationDrawer extends StatelessWidget {
           ListTile(
             title: Text('Program Manager'),
             onTap: () {
-              Navigator.pushReplacementNamed(context, router.ProgramManagerRoute);
+              Navigator.pushReplacementNamed(
+                  context, router.ProgramManagerRoute);
             },
           ),
           ListTile(

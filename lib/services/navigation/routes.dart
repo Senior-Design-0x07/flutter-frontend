@@ -10,8 +10,10 @@ const String HomeRoute = '/home';
 const String PinManagerRoute = '/pin_manager';
 const String ProgramManagerRoute = '/program_manager';
 const String WifiRoute = '/wifi';
+RouteSettings routeSettings;
 
 Route<dynamic> getRoutes(RouteSettings settings) {
+  routeSettings = settings;
   switch (settings.name) {
     case HomeRoute:
       return MaterialPageRoute(builder: (context) => Home());
@@ -22,6 +24,7 @@ Route<dynamic> getRoutes(RouteSettings settings) {
     case ProgramManagerRoute:
       return MaterialPageRoute(builder: (context) => ProgramManagerPage());
     default:
-      return MaterialPageRoute(builder: (context) => UndefinedRoute(name: settings.name));
+      return MaterialPageRoute(
+          builder: (context) => UndefinedRoute(name: settings.name));
   }
 }
