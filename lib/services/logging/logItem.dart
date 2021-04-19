@@ -24,7 +24,7 @@ class LogItem extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 )),
           ),
-          Expanded(child: Text(log.data)),
+          Expanded(child: Text(log.logInfo)),
         ],
       ),
     );

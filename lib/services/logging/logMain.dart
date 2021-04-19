@@ -15,12 +15,12 @@ class _LogMainState extends State<LogMain> {
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
       new GlobalKey<RefreshIndicatorState>();
   final HttpService http = HttpService();
-  List<Log> logData = [];
-  bool cmdSuccess = true;
-  bool clearButton = false;
-  bool connection = true;
-  List<String> connectionError;
-  String httpServiceError;
+  List<Log> _logData = [];
+  bool _cmdSuccess = true;
+  bool _clearButton = false;
+  bool _connection = true;
+  List<String> _connectionError;
+  String _httpServiceError;
   Timer _timer;
 
   void _grabLogPeriodically(int numSeconds) {
@@ -34,26 +34,26 @@ class _LogMainState extends State<LogMain> {
   }
 
   Widget _showConnectionErrors() {
-    switch (connectionError[0]) {
+    switch (_connectionError[0]) {
       case 'Timeout':
         return HHError(
-            title: connectionError[0] + " Exception",
+            title: _connectionError[0] + " Exception",
             message: "Can't Connect",
             type: 0);
       default:
         return HHError(
             title: "Exception",
-            message: "A connection error has ocurred",
+            message: "A _connection error has ocurred",
             type: 0);
     }
   }
 
   Widget _showHttpServiceErrors() {
-    switch (httpServiceError.split(":")[0]) {
+    switch (_httpServiceError.split(":")[0]) {
       case 'Exception': //Generic Exceptions from HTTP_SERVICE
         return HHError(
-            title: httpServiceError.split(":")[0],
-            message: httpServiceError.split("Exception: ")[1],
+            title: _httpServiceError.split(":")[0],
+            message: _httpServiceError.split("Exception: ")[1],
             type: 0);
       default:
         return HHError(
@@ -62,36 +62,41 @@ class _LogMainState extends State<LogMain> {
   }
 
   Widget _showClearLogError() {
-    cmdSuccess = true;
+    _cmdSuccess = true;
     return HHError(
         title: 'Clear Log', message: 'Log could not be cleared', type: 1);
   }
 
   void _handleErrors(Object error) {
-    if (connection || httpServiceError != null || !cmdSuccess)
+    if (_connection || _httpServiceError != null || !_cmdSuccess)
       setState(() {
         error.toString().split("Exception")[0] == "Timeout"
-            ? connection = false
-            : connection = true;
+            ? _connection = false
+            : _connection = true;
         error.toString().split("Exception")[0] != ""
-            ? this.connectionError = error.toString().split("Exception")
-            : this.httpServiceError = error.toString();
+            ? this._connectionError = error.toString().split("Exception")
+            : this._httpServiceError = error.toString();
       });
   }
 
   Future<void> _refresh() {
-    return http.getBackendLog(restURL: 'api/logging/get').then((_logData) {
-      connection = true;
-      if (!clearButton) {
-        if (_logData.isNotEmpty) {
+    return http.getBackendLog(restURL: 'api/logging/get').then((__logData) {
+      _connection = true;
+      if (!_clearButton) {
+        if (__logData.isNotEmpty) {
           setState(() {
-            logData = _logData;
+            _logData = __logData;
+          });
+        } else {
+          setState(() {
+            _connectionError = null;
+            _httpServiceError = null;
           });
         }
       } else {
         setState(() {
-          logData.clear();
-          clearButton = false;
+          _logData.clear();
+          _clearButton = false;
         });
       }
     }).catchError((Object error) {
@@ -109,7 +114,7 @@ class _LogMainState extends State<LogMain> {
 
   @override
   Widget build(BuildContext context) {
-    if (connection) _grabLogPeriodically(30);
+    if (_connection) _grabLogPeriodically(60);
     return Container(
       margin: const EdgeInsets.all(3.0),
       padding: const EdgeInsets.all(1.0),
@@ -148,9 +153,9 @@ class _LogMainState extends State<LogMain> {
                             ),
                             tooltip: 'Clear Log',
                             onPressed: () async {
-                              clearButton = true;
-                              if (connection) {
-                                cmdSuccess = await http
+                              _clearButton = true;
+                              if (_connection) {
+                                _cmdSuccess = await http
                                     .clearBackendLog(
                                         restURL: "api/logging/clear")
                                     .catchError((Object error) {
@@ -168,8 +173,8 @@ class _LogMainState extends State<LogMain> {
                             ),
                             tooltip: 'Refresh',
                             onPressed: () {
-                              clearButton = false;
-                              cmdSuccess = true;
+                              _clearButton = false;
+                              _cmdSuccess = true;
                               _refreshIndicatorKey.currentState.show();
                             }),
                       ]),
@@ -177,20 +182,20 @@ class _LogMainState extends State<LogMain> {
                   ],
                 ),
               ),
-              if (!connection) _showConnectionErrors(), // Connection Errors
-              if (httpServiceError != null)
+              if (!_connection) _showConnectionErrors(), // Connection Errors
+              if (_httpServiceError != null)
                 _showHttpServiceErrors(), //Http Service Errors
-              if (!cmdSuccess) _showClearLogError(),
+              if (!_cmdSuccess) _showClearLogError(),
               Expanded(
                 child: Card(
                   child: RefreshIndicator(
                     key: _refreshIndicatorKey,
                     onRefresh: _refresh,
-                    child: logData.isNotEmpty
+                    child: _logData.isNotEmpty
                         ? ListView(
                             scrollDirection: Axis.vertical,
                             shrinkWrap: true,
-                            children: logData
+                            children: _logData
                                 .map((Log log) => LogItem(log: log))
                                 .toList(),
                           )
