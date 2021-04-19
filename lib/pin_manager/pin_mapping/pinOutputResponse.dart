@@ -10,13 +10,19 @@ class PinOutputResponse extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     switch (type) {
+      case 0: //Initial text of nothing
+        return Center(
+          child: Text(''),
+        );
       case 1: // Add Pin
         return Center(child: Text('Add Pin Success'));
       case 2: // Find Pin
         return Column(
           children: [
             Center(child: Text('Found Pin Success')),
-            SizedBox(height: 10,),
+            SizedBox(
+              height: 10,
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -46,7 +52,7 @@ class PinOutputResponse extends StatelessWidget {
       case 4: // Remove All Pins
         return Center(child: Text('Remove All Pins Success'));
       default:
-        return Text('Im TEMPORARY in OUTPUT RESPONSE because of "0" ');
+        return Text('Im TEMPORARY in OUTPUT RESPONSE cause something not "0-4" ');
     }
   }
 }
