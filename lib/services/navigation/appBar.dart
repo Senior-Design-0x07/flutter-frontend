@@ -4,7 +4,8 @@ class HHAppBar extends StatelessWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
   final String title;
 
-  const HHAppBar({Key key, @required this.title, @required this.scaffoldKey}) : super(key: key);
+  const HHAppBar({Key key, @required this.title, @required this.scaffoldKey})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -23,16 +24,14 @@ class HHAppBar extends StatelessWidget {
         style: TextStyle(color: Colors.white),
       )),
       actions: <Widget>[
-        Padding(
-            padding: EdgeInsets.all(10.0),
-            child: Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: BorderRadius.circular(10)),
-              child: Center(child: Text("0")),
-            ))
+        Icon(
+          Icons.wifi,
+          // TODO Add if statement calling to check if internet is connected
+          // (Already implemented on backend, need GET Request) and if true
+          // Icon color is blue and if false then icon color is read
+          color: Colors.blue,
+          size: 30.0,
+        ),
       ],
     );
   }
