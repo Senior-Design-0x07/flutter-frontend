@@ -14,7 +14,7 @@ class _WifiPageState extends State<WifiPage> {
 
   String ssid = "";
   String password = "";
-  bool buttonPressed = false;
+  bool scanBtn = false;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +24,7 @@ class _WifiPageState extends State<WifiPage> {
       drawer: NavigationDrawer(),
       appBar: PreferredSize(
           preferredSize: const Size.fromHeight(60),
-          child: HHAppBar(title: 'Wifi', scaffoldKey: _scaffoldKey)),
+          child: HHAppBar(title: 'WiFi', scaffoldKey: _scaffoldKey)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(10.0),
@@ -36,14 +36,37 @@ class _WifiPageState extends State<WifiPage> {
                     Container(
                       height: 400,
                       width: double.infinity,
-                      child: buttonPressed
+                      child: scanBtn
                           ? FutureBuilder(
                               future: http.getKnownNetworks(
-                                  restURL: 'api/wifi_request'),
+                                  restURL: 'api/wifi_request', cmd: 'scan'),
                               builder: (BuildContext context,
                                   AsyncSnapshot snapshot) {
                                 if (snapshot.hasData) {
-                                  return Text(snapshot.data);
+                                  List<String> networkList =
+                                      snapshot.data.split('\',');
+                                  List badData = [];
+                                  for (int i = 0; i < networkList.length; i++) {
+                                    if (networkList[i].contains('x00')) {
+                                      badData.add(i);
+                                    }
+                                    networkList[i] =
+                                        networkList[i].replaceAll('"', '');
+                                    networkList[i] =
+                                        networkList[i].replaceAll('\'', '');
+                                  }
+                                  for (int i = badData.length - 1;
+                                      i >= 0;
+                                      i--) {
+                                    networkList.removeAt(badData[i]);
+                                  }
+                                  return ListView(
+                                      scrollDirection: Axis.vertical,
+                                      shrinkWrap: true,
+                                      children: networkList
+                                          .map((String network) =>
+                                              ListTile(title: Text(network)))
+                                          .toList());
                                 }
                                 return Column(
                                   children: [
@@ -106,7 +129,7 @@ class _WifiPageState extends State<WifiPage> {
                   new Container(
                     child: RaisedButton(
                       onPressed: () {
-                        buttonPressed = true;
+                        scanBtn = true;
                         setState(() {});
                       },
                       child: Text('Scan'),
@@ -123,6 +146,15 @@ class _WifiPageState extends State<WifiPage> {
                       child: Text('Connect'),
                     ),
                   ),
+                  new Container(
+                    child: RaisedButton(
+                      onPressed: () async {
+                        await http.getClearNetwork(
+                            restURL: 'api/wifi_request', cmd: 'clear');
+                      },
+                      child: Text('Clear Saved Network'),
+                    ),
+                  )
                 ],
               ),
             ],

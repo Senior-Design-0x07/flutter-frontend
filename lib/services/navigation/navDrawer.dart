@@ -35,7 +35,7 @@ class NavigationDrawer extends StatelessWidget {
             },
           ),
           ListTile(
-            title: Text('Connect to Wifi'),
+            title: Text('Connect to WiFi'),
             onTap: () {
               Navigator.pushReplacementNamed(context, router.WifiRoute);
             },
