@@ -5,6 +5,10 @@ import 'package:hobby_hub_ui/services/error/error_service.dart';
 import 'package:hobby_hub_ui/services/http/http_service.dart';
 
 class PinMapping extends StatefulWidget {
+  final HttpService http;
+
+  PinMapping({@required this.http});
+
   @override
   _PinMappingState createState() => _PinMappingState();
 }
@@ -14,7 +18,6 @@ class _PinMappingState extends State<PinMapping> {
       new GlobalKey<RefreshIndicatorState>();
   TextEditingController _textFieldController = TextEditingController();
 
-  final HttpService http = HttpService();
   final List<String> _pinOptions = ["GPIO", "PWM", "I2C", "ANALOG", "SPECIAL"];
   List<Map<int, String>> tempStorage = [];
   Map<int, List<String>> _physicalPinOptions = {};
@@ -118,7 +121,7 @@ class _PinMappingState extends State<PinMapping> {
   }
 
   Future<void> _refresh() {
-    return http
+    return widget.http
         .getPinList(restURL: 'api/pin_manager/grab_used_pins')
         .then((_mappedPins) {
       connection = true;
@@ -173,7 +176,7 @@ class _PinMappingState extends State<PinMapping> {
 
   void _getPhysicalPins() async {
     if (_physicalPinOptions != {})
-      tempStorage = await http
+      tempStorage = await widget.http
           .getPhysicalPins(restURL: 'api/pin_manager/grab_physical_pins')
           .catchError((Object error) {
         _handleErrors(error);
@@ -267,7 +270,7 @@ class _PinMappingState extends State<PinMapping> {
                                       onPressed: () async {
                                         Navigator.of(context).pop();
                                         httpServiceError = null;
-                                        cmdSuccess = await http.requestNewPin(
+                                        cmdSuccess = await widget.http.requestNewPin(
                                           restURL:
                                               'api/pin_manager/request_pin',
                                           postBody: {
@@ -322,7 +325,7 @@ class _PinMappingState extends State<PinMapping> {
                                         Navigator.of(context).pop();
                                         httpServiceError = null;
                                         selectedPin = null;
-                                        selectedPin = await http.getPin(
+                                        selectedPin = await widget.http.getPin(
                                             restURL: 'api/pin_manager/get_pin',
                                             postBody: {
                                               "pin_name": pinNameValue
@@ -364,7 +367,7 @@ class _PinMappingState extends State<PinMapping> {
                     onPressed: () async {
                       if (mappedPins.isNotEmpty) {
                         httpServiceError = null;
-                        cmdSuccess = await http
+                        cmdSuccess = await widget.http
                             .clearUnusedPins(
                                 restURL: 'api/pin_manager/clear_unused')
                             .catchError((Object error) {
@@ -394,7 +397,7 @@ class _PinMappingState extends State<PinMapping> {
                     tooltip: 'Reset All Pins',
                     onPressed: () async {
                       httpServiceError = null;
-                      cmdSuccess = await http
+                      cmdSuccess = await widget.http
                           .resetPinConfig(
                               restURL: 'api/pin_manager/reset_config')
                           .catchError((Object error) {
@@ -532,7 +535,7 @@ class _PinMappingState extends State<PinMapping> {
                                                                             onPressed:
                                                                                 () async {
                                                                               Navigator.of(context).pop();
-                                                                              cmdSuccess = await http.updatePin(restURL: 'api/pin_manager/update_pin', postBody: {
+                                                                              cmdSuccess = await widget.http.updatePin(restURL: 'api/pin_manager/update_pin', postBody: {
                                                                                 'pin_name': mappedPin.namedPin,
                                                                                 'new_physical_pin': _newPhysicalPin
                                                                               }).catchError((Object error) {

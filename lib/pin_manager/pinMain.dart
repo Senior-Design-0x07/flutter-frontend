@@ -8,7 +8,9 @@ import 'package:hobby_hub_ui/services/navigation/navDrawer.dart';
 
 class PinMain extends StatelessWidget {
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
-  final HttpService http = new HttpService();
+  final HttpService http;
+
+  PinMain({@required this.http});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +21,8 @@ class PinMain extends StatelessWidget {
         drawer: NavigationDrawer(),
         appBar: PreferredSize(
             preferredSize: const Size.fromHeight(60),
-            child: HHAppBar(title: 'Pin Manager', scaffoldKey: _scaffoldKey)),
+            child: HHAppBar(
+                title: 'Pin Manager', scaffoldKey: _scaffoldKey)),
         body: SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.all(10.0),
@@ -35,7 +38,9 @@ class PinMain extends StatelessWidget {
                   ),
                 ),
                 Container(
-                    height: 350, width: double.infinity, child: PinMapping()),
+                    height: 350,
+                    width: double.infinity,
+                    child: PinMapping(http: http)),
               ],
             ),
           ),
@@ -48,7 +53,8 @@ class PinMain extends StatelessWidget {
         drawer: NavigationDrawer(),
         appBar: PreferredSize(
             preferredSize: const Size.fromHeight(60),
-            child: HHAppBar(title: 'Pin Manager', scaffoldKey: _scaffoldKey)),
+            child: HHAppBar(
+                title: 'Pin Manager', scaffoldKey: _scaffoldKey)),
         body: SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.all(10.0),
@@ -64,7 +70,11 @@ class PinMain extends StatelessWidget {
                   ),
                 ),
                 Container(
-                    height: 350, width: double.infinity, child: PinMapping()),
+                    height: 350,
+                    width: double.infinity,
+                    child: PinMapping(
+                      http: http,
+                    )),
               ],
             ),
           ),
