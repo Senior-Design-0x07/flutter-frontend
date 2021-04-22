@@ -10,24 +10,24 @@ class ProgramManagerPage extends StatefulWidget {
 
 class _ProgramManagerPageState extends State<ProgramManagerPage> {
   // local lists for keeping track of current running/paused programs
-  List<Program> runningPrograms = new List();
-  List<Program> pausedPrograms = new List();
+  List<Program> runningPrograms = List<Program>.empty(growable: true);
+  List<Program> pausedPrograms = List<Program>.empty(growable: true);
 
   // key for saving/refreshing state of program lists
-  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey_Running =
+  final GlobalKey<RefreshIndicatorState> _runningRefreshKey =
       new GlobalKey<RefreshIndicatorState>();
 
-  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey_Paused =
+  final GlobalKey<RefreshIndicatorState> _pausedRefreshKey =
       new GlobalKey<RefreshIndicatorState>();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _refreshIndicatorKey_Running.currentState.show();
+      _runningRefreshKey.currentState.show();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _refreshIndicatorKey_Paused.currentState.show();
+      _pausedRefreshKey.currentState.show();
     });
   }
 
@@ -129,7 +129,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                   ),
                   tooltip: 'Refresh Running Programs',
                   onPressed: () {
-                    _refreshIndicatorKey_Running.currentState.show();
+                    _runningRefreshKey.currentState.show();
                   }),
             ],
           ),
@@ -150,7 +150,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
           SingleChildScrollView(
             padding: EdgeInsets.all(10.0),
             child: RefreshIndicator(
-              key: _refreshIndicatorKey_Running,
+              key: _runningRefreshKey,
               onRefresh: _refreshRunning,
               child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -213,10 +213,8 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                         var output = await HttpService
                                                             .postProgramCommand(
                                                                 restURL:
-                                                                    'api/program_command',
+                                                                    'api/program_manager/pause_program',
                                                                 postBody: {
-                                                              "command":
-                                                                  "pause_program",
                                                               "program":
                                                                   currentProgram
                                                                       .fileName
@@ -232,10 +230,8 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                         var output = await HttpService
                                                             .postProgramCommand(
                                                                 restURL:
-                                                                    'api/program_command',
+                                                                    'api/program_manager/stop_program',
                                                                 postBody: {
-                                                              "command":
-                                                                  "stop_program",
                                                               "program":
                                                                   currentProgram
                                                                       .fileName
@@ -313,7 +309,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                   ),
                   tooltip: 'Refresh Paused Programs',
                   onPressed: () {
-                    _refreshIndicatorKey_Paused.currentState.show();
+                    _pausedRefreshKey.currentState.show();
                   }),
             ],
           ),
@@ -334,7 +330,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
           SingleChildScrollView(
             padding: EdgeInsets.all(10.0),
             child: RefreshIndicator(
-              key: _refreshIndicatorKey_Paused,
+              key: _pausedRefreshKey,
               onRefresh: _refreshPaused,
               child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -397,10 +393,8 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                         var output = await HttpService
                                                             .postProgramCommand(
                                                                 restURL:
-                                                                    'api/program_command',
+                                                                    'api/program_manager/continue_program',
                                                                 postBody: {
-                                                              "command":
-                                                                  "continue_program",
                                                               "program":
                                                                   currentProgram
                                                                       .fileName
@@ -416,10 +410,8 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                         var output = await HttpService
                                                             .postProgramCommand(
                                                                 restURL:
-                                                                    'api/program_command',
+                                                                    'api/program_manager/stop_program',
                                                                 postBody: {
-                                                              "command":
-                                                                  "stop_program",
                                                               "program":
                                                                   currentProgram
                                                                       .fileName
