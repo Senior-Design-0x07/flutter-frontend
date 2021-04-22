@@ -10,13 +10,13 @@ import 'package:http/http.dart';
 // https://flutter.dev/docs/cookbook/networking/fetch-data#2-make-a-network-request
 
 class HttpService {
-  final String ipUrl = "http://192.168.7.2:5000";
+  final String ipURL = "http://192.168.7.2:5000";
 
   /*
       Pin Manager Http Requests
   */
   Future<List<Pin>> getPinList({@required var restURL}) async {
-    Response res = await get("$ipUrl/$restURL")
+    Response res = await get("$ipURL/$restURL")
         .catchError((e) {})
         .timeout(Duration(seconds: 5));
     if (res.statusCode == 200) {
@@ -31,7 +31,7 @@ class HttpService {
 
   Future<List<Map<int, String>>> getPhysicalPins(
       {@required var restURL}) async {
-    Response res = await get("$ipUrl/$restURL")
+    Response res = await get("$ipURL/$restURL")
         .catchError((e) {})
         .timeout(Duration(seconds: 5));
     if (res.statusCode == 200) {
@@ -56,7 +56,7 @@ class HttpService {
       {@required var restURL, @required Map<String, dynamic> postBody}) async {
     var pinName = postBody.values.toList()[0];
     if (pinName != "") {
-      Response res = await post("$ipUrl/$restURL", body: postBody)
+      Response res = await post("$ipURL/$restURL", body: postBody)
           .catchError((e) {})
           .timeout(Duration(seconds: 5));
       if (res.statusCode == 200) {
@@ -73,7 +73,7 @@ class HttpService {
       {@required var restURL, @required Map<String, dynamic> postBody}) async {
     var pinName = postBody.values.toList()[0];
     if (pinName != "") {
-      Response res = await post("$ipUrl/$restURL", body: postBody)
+      Response res = await post("$ipURL/$restURL", body: postBody)
           .catchError((e) {})
           .timeout(Duration(seconds: 5));
       if (res.statusCode == 200) {
@@ -94,7 +94,7 @@ class HttpService {
     var pinName = postBody.values.toList()[0];
     var newPhysicalPin = postBody.values.toList()[1];
     if (newPhysicalPin != null) {
-      Response res = await post("$ipUrl/$restURL", body: postBody)
+      Response res = await post("$ipURL/$restURL", body: postBody)
           .catchError((e) {})
           .timeout(Duration(seconds: 5));
       if (res.statusCode == 200) {
@@ -109,7 +109,7 @@ class HttpService {
 
   // Probably won't need this? but here for now
   Future<bool> clearUnusedPins({@required var restURL}) async {
-    Response res = await get("$ipUrl/$restURL")
+    Response res = await get("$ipURL/$restURL")
         .catchError((e) {})
         .timeout(Duration(seconds: 5));
     if (res.statusCode == 200) {
@@ -120,7 +120,7 @@ class HttpService {
   }
 
   Future<bool> resetPinConfig({@required var restURL}) async {
-    Response res = await get("$ipUrl/$restURL")
+    Response res = await get("$ipURL/$restURL")
         .catchError((e) {})
         .timeout(Duration(seconds: 5));
     if (res.statusCode == 200) {
@@ -131,11 +131,32 @@ class HttpService {
   }
 
   /*
+      Program Manager Requests
+  */
+  Future<String> getProgramList({@required var restURL}) async {
+    Response res = await get("$ipURL/$restURL");
+    if (res.statusCode == 200) {
+      return res.body;
+    } else {
+      throw Exception('Failed to grab list or execute program command');
+    }
+  }
+
+  Future<void> postProgramCommand(
+      {@required var restURL, @required dynamic postBody}) async {
+    Response res = await post("$ipURL/$restURL", body: postBody);
+    if (res.statusCode != 200) {
+      throw Exception('Failed to post: $postBody to $restURL');
+      // return "Program Command Successful";
+    }
+  }
+
+  /*
       Wifi Http Requests
   */
   Future<String> getKnownNetworks(
       {@required var restURL, @required var cmd}) async {
-    Response res = await get("$ipUrl/$restURL/$cmd");
+    Response res = await get("$ipURL/$restURL/$cmd");
     if (res.statusCode == 200) {
       return res.body;
     } else {
@@ -145,7 +166,7 @@ class HttpService {
 
   Future<void> postSelectedNetwork(
       {@required var restURL, @required dynamic postBody}) async {
-    Response res = await post("$ipUrl/$restURL", body: postBody);
+    Response res = await post("$ipURL/$restURL", body: postBody);
     if (res.statusCode != 200) {
       throw Exception('Failed to post: $postBody to $restURL');
     }
@@ -153,7 +174,7 @@ class HttpService {
 
   Future<String> getClearNetwork(
       {@required var restURL, @required var cmd}) async {
-    Response res = await get("$ipUrl/$restURL/$cmd");
+    Response res = await get("$ipURL/$restURL/$cmd");
     if (res.statusCode == 200) {
       return res.body;
     } else {
@@ -165,7 +186,7 @@ class HttpService {
       Logging Http Requests
   */
   Future<List<Log>> getBackendLog({@required var restURL}) async {
-    Response res = await get("$ipUrl/$restURL")
+    Response res = await get("$ipURL/$restURL")
         .catchError((e) {})
         .timeout(Duration(seconds: 5));
     if (res.statusCode == 200) {
@@ -179,7 +200,7 @@ class HttpService {
   }
 
   Future<bool> clearBackendLog({@required var restURL}) async {
-    Response res = await get("$ipUrl/$restURL")
+    Response res = await get("$ipURL/$restURL")
         .catchError((e) {})
         .timeout(Duration(seconds: 5));
     if (res.statusCode == 200) {

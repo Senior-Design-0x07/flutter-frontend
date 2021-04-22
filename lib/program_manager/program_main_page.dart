@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hobby_hub_ui/models/program.dart';
+import 'dart:convert';
 
 import 'package:hobby_hub_ui/services/http/http_service.dart';
 import 'package:hobby_hub_ui/services/navigation/appBar.dart';
@@ -10,8 +12,86 @@ class ProgramManagerPage extends StatefulWidget {
 }
 
 class _ProgramManagerPageState extends State<ProgramManagerPage> {
-  final HttpService http = new HttpService();
+  // local lists for keeping track of current running/paused programs
+  List<Program> runningPrograms = List<Program>.empty(growable: true);
+  List<Program> pausedPrograms = List<Program>.empty(growable: true);
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
+  final HttpService http = new HttpService();
+
+  // key for saving/refreshing state of program lists
+  final GlobalKey<RefreshIndicatorState> _runningRefreshKey =
+      new GlobalKey<RefreshIndicatorState>();
+
+  final GlobalKey<RefreshIndicatorState> _pausedRefreshKey =
+      new GlobalKey<RefreshIndicatorState>();
+
+  // required for refresh indicators
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _runningRefreshKey.currentState.show();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _pausedRefreshKey.currentState.show();
+    });
+  }
+
+  // refresh indicator method - get running programs list for ListView widget
+  Future<void> _refreshRunning() async {
+    String rawRunningPrograms = await http.getProgramList(
+        restURL: 'api/program_manager/running_programs');
+
+    _parsePrograms("runningPrograms", rawRunningPrograms);
+    setState(() {});
+  }
+
+  // refresh indicator method - get paused programs list for ListView widget
+  Future<void> _refreshPaused() async {
+    String rawPausedPrograms = await http.getProgramList(
+        restURL: 'api/program_manager/paused_programs');
+
+    _parsePrograms("pausedPrograms", rawPausedPrograms);
+    setState(() {});
+  }
+
+  // method for parsing text into Program objects for ListView mapping
+  void _parsePrograms(String listName, String rawPrograms) {
+    // clear current list
+    if (listName == "runningPrograms") {
+      runningPrograms.clear();
+    } else if (listName == "pausedPrograms") {
+      pausedPrograms.clear();
+    }
+
+    if (listName == "runningPrograms" || listName == "pausedPrograms") {
+      // convert list of running programs into List<String>
+      LineSplitter ls = new LineSplitter();
+      List<String> strPrograms = ls.convert(rawPrograms);
+
+      // convert list of Strings into Program objects
+      for (var i = 1; i < strPrograms.length - 1; i++) {
+        String programInfo = strPrograms[i];
+        List<String> programParts = programInfo.trim().split(' ');
+
+        // remove unnecessary characters (," )
+        programParts[0] = programParts[0].replaceAll('"', '');
+        programParts[1] = programParts[1].replaceAll('"', '');
+        programParts[1] = programParts[1].replaceAll(',', '');
+
+        Program currentProgram = new Program(
+            filePath: programParts[0],
+            fileName: programParts[0].split('/').last,
+            processID: int.parse(programParts[1]));
+
+        if (currentProgram != null && listName == "runningPrograms") {
+          runningPrograms.add(currentProgram);
+        } else if (currentProgram != null && listName == "pausedPrograms") {
+          pausedPrograms.add(currentProgram);
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,132 +103,404 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
           preferredSize: const Size.fromHeight(60),
           child: HHAppBar(title: 'Program Manager', scaffoldKey: _scaffoldKey)),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(10.0),
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                    side: BorderSide(width: 2, color: Colors.grey.shade300)),
-                child: Builder(
-                  builder: (context) => InkWell(
-                    splashColor: Colors.green.withAlpha(80),
-                    onTap: () => showDialog(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                              title: Text("Program Info"),
-                              content: Text("What would you like to do?"),
-                              actions: [
-                                FlatButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: Text('Start')),
-                                FlatButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: Text('Stop')),
-                                FlatButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: Text('Restart')),
-                              ],
-                            ),
-                        barrierDismissible: false),
-                    child: Container(
-                      width: double.infinity,
-                      height: 100,
-                      child: Center(child: Text("User Program 1")),
-                    ),
+        child: Column(children: [
+          // refresh program lists button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(
+                  iconSize: 30.0,
+                  icon: const Icon(
+                    Icons.refresh,
+                    color: Colors.amber,
+                    size: 30.0,
                   ),
-                )),
-            Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                    side: BorderSide(width: 2, color: Colors.grey.shade300)),
-                child: Builder(
-                  builder: (context) => InkWell(
-                    splashColor: Colors.green.withAlpha(80),
-                    onTap: () => showDialog(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                              title: Text("Program Info"),
-                              content: Text("What would you like to do?"),
-                              actions: [
-                                FlatButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: Text('Start')),
-                                FlatButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: Text('Stop')),
-                                FlatButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: Text('Restart')),
-                              ],
-                            ),
-                        barrierDismissible: false),
-                    child: Container(
-                      width: double.infinity,
-                      height: 100,
-                      child: Center(child: Text("User Program 2")),
-                    ),
-                  ),
-                )),
-            Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                    side: BorderSide(width: 2, color: Colors.grey.shade300)),
-                child: Builder(
-                  builder: (context) => InkWell(
-                    splashColor: Colors.green.withAlpha(80),
-                    onTap: () => showDialog(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                              title: Text("Program Info"),
-                              content: Text("What would you like to do?"),
-                              actions: [
-                                FlatButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: Text('Start')),
-                                FlatButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: Text('Stop')),
-                                FlatButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: Text('Restart')),
-                              ],
-                            ),
-                        barrierDismissible: false),
-                    child: Container(
-                      width: double.infinity,
-                      height: 100,
-                      child: Center(child: Text("User Program 3")),
-                    ),
-                  ),
-                )),
-            SizedBox(height: 15),
-            Container(
-              child: Align(
-                  alignment: Alignment.centerRight,
-                  child: RaisedButton(
-                      onPressed: () {}, child: Text("Upload Programs"))),
+                  tooltip: 'Refresh Running Programs',
+                  onPressed: () {
+                    _runningRefreshKey.currentState.show();
+                  }),
+            ],
+          ),
+          Text(
+            'Running Programs',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              color: Colors.black,
             ),
-          ]),
-        ),
+          ),
+          const Divider(
+            height: 10,
+            thickness: 5,
+            indent: 20,
+            endIndent: 20,
+          ),
+          SingleChildScrollView(
+            padding: EdgeInsets.all(10.0),
+            child: RefreshIndicator(
+              key: _runningRefreshKey,
+              onRefresh: _refreshRunning,
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      height: 225,
+                      width: double.infinity,
+                      child: FutureBuilder(
+                        future: http.getProgramList(
+                            restURL: 'api/program_manager/running_programs'),
+                        builder:
+                            (BuildContext context, AsyncSnapshot snapshot) {
+                          if (snapshot.hasData) {
+                            // parse running programs into mappable List of objects
+                            _parsePrograms("runningPrograms", snapshot.data);
+
+                            // display icon/message to user if no programs are present
+                            if (runningPrograms.isNotEmpty) {
+                              return ListView(
+                                children: runningPrograms
+                                    .map(
+                                      (Program currentProgram) => ListTile(
+                                        title: Text(currentProgram.fileName),
+                                        subtitle: Column(
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Text("Path: "),
+                                                Text(
+                                                  currentProgram.filePath,
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              children: [
+                                                Text("Process ID: "),
+                                                Text(
+                                                  currentProgram.processID
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                        onTap: () => showDialog(
+                                            context: context,
+                                            builder: (_) => AlertDialog(
+                                                  title:
+                                                      Text("Program Commands"),
+                                                  content: Text(
+                                                      "What would you like to do with this program?\n\n" +
+                                                          currentProgram
+                                                              .fileName),
+                                                  actions: [
+                                                    FlatButton(
+                                                      onPressed: () async {
+                                                        var output = await http
+                                                            .postProgramCommand(
+                                                                restURL:
+                                                                    'api/program_manager/pause_program',
+                                                                postBody: {
+                                                              "program":
+                                                                  currentProgram
+                                                                      .fileName
+                                                            });
+                                                        setState(() {});
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                      child: Text(("Pause")),
+                                                    ),
+                                                    FlatButton(
+                                                      onPressed: () async {
+                                                        var output = await http
+                                                            .postProgramCommand(
+                                                                restURL:
+                                                                    'api/program_manager/stop_program',
+                                                                postBody: {
+                                                              "program":
+                                                                  currentProgram
+                                                                      .fileName
+                                                            });
+                                                        setState(() {});
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                      child: Text(("Stop")),
+                                                    ),
+                                                    FlatButton(
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                      child: Text(
+                                                          ("Close Window")),
+                                                    )
+                                                  ],
+                                                ),
+                                            barrierDismissible: false),
+                                      ),
+                                    )
+                                    .toList(),
+                              );
+                            } else {
+                              return Row(
+                                children: [
+                                  Icon(
+                                    Icons.info,
+                                    color: Colors.green,
+                                    size: 30.0,
+                                  ),
+                                  Text(
+                                    "NO RUNNING PROGRAMS",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }
+                          }
+                          return Column(
+                            children: [
+                              SizedBox(
+                                height: 25,
+                              ),
+                              Text("Grabbing List of Running Programs"),
+                              SizedBox(
+                                height: 20,
+                              ),
+                              Center(child: CircularProgressIndicator()),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ]),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              // refresh program lists button
+              IconButton(
+                  iconSize: 30.0,
+                  icon: const Icon(
+                    Icons.refresh,
+                    color: Colors.amber,
+                    size: 30.0,
+                  ),
+                  tooltip: 'Refresh Paused Programs',
+                  onPressed: () {
+                    _pausedRefreshKey.currentState.show();
+                  }),
+            ],
+          ),
+          Text(
+            'Paused Programs',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              color: Colors.black,
+            ),
+          ),
+          const Divider(
+            height: 10,
+            thickness: 5,
+            indent: 20,
+            endIndent: 20,
+          ),
+          SingleChildScrollView(
+            padding: EdgeInsets.all(10.0),
+            child: RefreshIndicator(
+              key: _pausedRefreshKey,
+              onRefresh: _refreshPaused,
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      height: 225,
+                      width: double.infinity,
+                      child: FutureBuilder(
+                        future: http.getProgramList(
+                            restURL: 'api/program_manager/paused_programs'),
+                        builder:
+                            (BuildContext context, AsyncSnapshot snapshot) {
+                          if (snapshot.hasData) {
+                            // parse paused programs into mappable List of objects
+                            _parsePrograms("pausedPrograms", snapshot.data);
+
+                            // display icon/message to user if no programs are present
+                            if (pausedPrograms.isNotEmpty) {
+                              return ListView(
+                                children: pausedPrograms
+                                    .map(
+                                      (Program currentProgram) => ListTile(
+                                        title: Text(currentProgram.fileName),
+                                        subtitle: Column(
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Text("Path: "),
+                                                Text(
+                                                  currentProgram.filePath,
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              children: [
+                                                Text("Process ID: "),
+                                                Text(
+                                                  currentProgram.processID
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                        onTap: () => showDialog(
+                                            context: context,
+                                            builder: (_) => AlertDialog(
+                                                  title:
+                                                      Text("Program Commands"),
+                                                  content: Text(
+                                                      "What would you like to do with this program?\n\n" +
+                                                          currentProgram
+                                                              .fileName),
+                                                  actions: [
+                                                    FlatButton(
+                                                      onPressed: () async {
+                                                        var output = await http
+                                                            .postProgramCommand(
+                                                                restURL:
+                                                                    'api/program_manager/continue_program',
+                                                                postBody: {
+                                                              "program":
+                                                                  currentProgram
+                                                                      .fileName
+                                                            });
+                                                        setState(() {});
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                      child: Text(("Continue")),
+                                                    ),
+                                                    FlatButton(
+                                                      onPressed: () async {
+                                                        var output = await http
+                                                            .postProgramCommand(
+                                                                restURL:
+                                                                    'api/program_manager/stop_program',
+                                                                postBody: {
+                                                              "program":
+                                                                  currentProgram
+                                                                      .fileName
+                                                            });
+                                                        setState(() {});
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                      child: Text(("Stop")),
+                                                    ),
+                                                    FlatButton(
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                      child: Text(
+                                                          ("Close Window")),
+                                                    )
+                                                  ],
+                                                ),
+                                            barrierDismissible: false),
+                                      ),
+                                    )
+                                    .toList(),
+                              );
+                            } else {
+                              return Row(
+                                children: [
+                                  Icon(
+                                    Icons.info,
+                                    color: Colors.green,
+                                    size: 30.0,
+                                  ),
+                                  Text(
+                                    "NO PAUSED PROGRAMS",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }
+                          }
+                          return Column(
+                            children: [
+                              SizedBox(
+                                height: 25,
+                              ),
+                              Text("Grabbing List of Paused Programs"),
+                              SizedBox(
+                                height: 20,
+                              ),
+                              Center(child: CircularProgressIndicator()),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ]),
+            ),
+          ),
+          // Buttons - Stop All & Restart All Programs
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              FlatButton(
+                onPressed: () async {
+                  var output = await http.postProgramCommand(
+                      restURL: 'api/program_command',
+                      postBody: {
+                        "command": "stop_ALLprograms",
+                        "program": "ALLprograms"
+                      });
+                  setState(() {});
+                },
+                color: Colors.grey[300],
+                child: Text(("Stop ALL")),
+              ),
+              FlatButton(
+                onPressed: () async {
+                  var output = await http.postProgramCommand(
+                      restURL: 'api/program_command',
+                      postBody: {
+                        "command": "restart_ALLprograms",
+                        "program": "ALLprograms"
+                      });
+                  setState(() {});
+                },
+                color: Colors.grey[300],
+                child: Text(("Restart ALL")),
+              )
+            ],
+          ),
+        ]),
       ),
     );
   }
