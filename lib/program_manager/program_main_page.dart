@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:hobby_hub_ui/http/http_service.dart';
 import 'package:hobby_hub_ui/models/program.dart';
 import 'dart:convert';
+
+import 'package:hobby_hub_ui/services/http/http_service.dart';
+import 'package:hobby_hub_ui/services/navigation/appBar.dart';
+import 'package:hobby_hub_ui/services/navigation/navDrawer.dart';
 
 class ProgramManagerPage extends StatefulWidget {
   @override
@@ -12,6 +15,8 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
   // local lists for keeping track of current running/paused programs
   List<Program> runningPrograms = List<Program>.empty(growable: true);
   List<Program> pausedPrograms = List<Program>.empty(growable: true);
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
+  final HttpService http = new HttpService();
 
   // key for saving/refreshing state of program lists
   final GlobalKey<RefreshIndicatorState> _runningRefreshKey =
@@ -33,7 +38,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
 
   // refresh indicator method - get running programs list for ListView widget
   Future<void> _refreshRunning() async {
-    String rawRunningPrograms = await HttpService.getProgramList(
+    String rawRunningPrograms = await http.getProgramList(
         restURL: 'api/program_manager/running_programs');
 
     _parsePrograms("runningPrograms", rawRunningPrograms);
@@ -42,7 +47,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
 
   // refresh indicator method - get paused programs list for ListView widget
   Future<void> _refreshPaused() async {
-    String rawPausedPrograms = await HttpService.getProgramList(
+    String rawPausedPrograms = await http.getProgramList(
         restURL: 'api/program_manager/paused_programs');
 
     _parsePrograms("pausedPrograms", rawPausedPrograms);
@@ -91,29 +96,12 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.green,
-        elevation: 0,
-        leading: Icon(Icons.menu),
-        title: Center(
-            child: Text(
-          "Program Manager",
-          style: TextStyle(color: Colors.white),
-        )),
-        actions: <Widget>[
-          Padding(
-              padding: EdgeInsets.all(10.0),
-              child: Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                    color: Colors.grey[400],
-                    borderRadius: BorderRadius.circular(10)),
-                child: Center(child: Text("0")),
-              ))
-        ],
-      ),
+      drawer: NavigationDrawer(),
+      appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: HHAppBar(title: 'Program Manager', scaffoldKey: _scaffoldKey)),
       body: SafeArea(
         child: Column(children: [
           Row(
@@ -159,7 +147,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                       height: 225,
                       width: double.infinity,
                       child: FutureBuilder(
-                        future: HttpService.getProgramList(
+                        future: http.getProgramList(
                             restURL: 'api/program_manager/running_programs'),
                         builder:
                             (BuildContext context, AsyncSnapshot snapshot) {
@@ -210,7 +198,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                   actions: [
                                                     FlatButton(
                                                       onPressed: () async {
-                                                        var output = await HttpService
+                                                        var output = await http
                                                             .postProgramCommand(
                                                                 restURL:
                                                                     'api/program_manager/pause_program',
@@ -227,7 +215,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                     ),
                                                     FlatButton(
                                                       onPressed: () async {
-                                                        var output = await HttpService
+                                                        var output = await http
                                                             .postProgramCommand(
                                                                 restURL:
                                                                     'api/program_manager/stop_program',
@@ -339,7 +327,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                       height: 225,
                       width: double.infinity,
                       child: FutureBuilder(
-                        future: HttpService.getProgramList(
+                        future: http.getProgramList(
                             restURL: 'api/program_manager/paused_programs'),
                         builder:
                             (BuildContext context, AsyncSnapshot snapshot) {
@@ -390,7 +378,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                   actions: [
                                                     FlatButton(
                                                       onPressed: () async {
-                                                        var output = await HttpService
+                                                        var output = await http
                                                             .postProgramCommand(
                                                                 restURL:
                                                                     'api/program_manager/continue_program',
@@ -407,7 +395,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                     ),
                                                     FlatButton(
                                                       onPressed: () async {
-                                                        var output = await HttpService
+                                                        var output = await http
                                                             .postProgramCommand(
                                                                 restURL:
                                                                     'api/program_manager/stop_program',

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:hobby_hub_ui/http/http_service.dart';
-import 'package:hobby_hub_ui/models/network.dart';
+import 'package:hobby_hub_ui/services/http/http_service.dart';
+import 'package:hobby_hub_ui/services/navigation/appBar.dart';
+import 'package:hobby_hub_ui/services/navigation/navDrawer.dart';
 
 class WifiPage extends StatefulWidget {
   @override
@@ -8,37 +9,22 @@ class WifiPage extends StatefulWidget {
 }
 
 class _WifiPageState extends State<WifiPage> {
+  final HttpService http = new HttpService();
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
+
   String ssid = "";
   String password = "";
-  HttpService http = new HttpService();
-  bool buttonPressed = false;
+  bool scanBtn = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.green,
-        elevation: 0,
-        leading: Icon(Icons.menu),
-        title: Center(
-            child: Text(
-          "WiFi Login",
-          style: TextStyle(color: Colors.white),
-        )),
-        actions: <Widget>[
-          Padding(
-              padding: EdgeInsets.all(10.0),
-              child: Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                    color: Colors.grey[400],
-                    borderRadius: BorderRadius.circular(10)),
-                child: Center(child: Text("0")),
-              ))
-        ],
-      ),
+      drawer: NavigationDrawer(),
+      appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: HHAppBar(title: 'WiFi', scaffoldKey: _scaffoldKey)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(10.0),
@@ -50,23 +36,37 @@ class _WifiPageState extends State<WifiPage> {
                     Container(
                       height: 400,
                       width: double.infinity,
-                      child: buttonPressed
+                      child: scanBtn
                           ? FutureBuilder(
-                              future: http.getScannedNetworks(
-                                  restURL: 'api/scan_wifi'),
+                              future: http.getKnownNetworks(
+                                  restURL: 'api/wifi_request', cmd: 'scan'),
                               builder: (BuildContext context,
                                   AsyncSnapshot snapshot) {
                                 if (snapshot.hasData) {
-                                  List<Network> networks = snapshot.data;
+                                  List<String> networkList =
+                                      snapshot.data.split('\',');
+                                  List badData = [];
+                                  for (int i = 0; i < networkList.length; i++) {
+                                    if (networkList[i].contains('x00')) {
+                                      badData.add(i);
+                                    }
+                                    networkList[i] =
+                                        networkList[i].replaceAll('"', '');
+                                    networkList[i] =
+                                        networkList[i].replaceAll('\'', '');
+                                  }
+                                  for (int i = badData.length - 1;
+                                      i >= 0;
+                                      i--) {
+                                    networkList.removeAt(badData[i]);
+                                  }
                                   return ListView(
-                                    children: networks
-                                        .map(
-                                          (Network network) => ListTile(
-                                            title: Text(network.name),
-                                          ),
-                                        )
-                                        .toList(),
-                                  );
+                                      scrollDirection: Axis.vertical,
+                                      shrinkWrap: true,
+                                      children: networkList
+                                          .map((String network) =>
+                                              ListTile(title: Text(network)))
+                                          .toList());
                                 }
                                 return Column(
                                   children: [
@@ -112,7 +112,7 @@ class _WifiPageState extends State<WifiPage> {
                       margin: const EdgeInsets.all(30),
                       child: TextField(
                         onChanged: (String str) {
-                          ssid = str;
+                          password = str;
                         },
                         obscureText: true,
                         decoration: InputDecoration(
@@ -129,7 +129,7 @@ class _WifiPageState extends State<WifiPage> {
                   new Container(
                     child: RaisedButton(
                       onPressed: () {
-                        buttonPressed = true;
+                        scanBtn = true;
                         setState(() {});
                       },
                       child: Text('Scan'),
@@ -137,20 +137,25 @@ class _WifiPageState extends State<WifiPage> {
                   ),
                   new Container(
                     child: RaisedButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        await http.postSelectedNetwork(
+                            restURL: 'api/wifi_request',
+                            postBody: {"ssid": ssid, "password": password});
+                        setState(() {});
+                      },
                       child: Text('Connect'),
                     ),
                   ),
+                  new Container(
+                    child: RaisedButton(
+                      onPressed: () async {
+                        await http.getClearNetwork(
+                            restURL: 'api/wifi_request', cmd: 'clear');
+                      },
+                      child: Text('Clear Saved Network'),
+                    ),
+                  )
                 ],
-              ),
-              SizedBox(
-                height: 10,
-              ),
-              RaisedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text('Go Back to Home Page'),
               ),
             ],
           ),
