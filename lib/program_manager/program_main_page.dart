@@ -25,6 +25,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
   final GlobalKey<RefreshIndicatorState> _pausedRefreshKey =
       new GlobalKey<RefreshIndicatorState>();
 
+  // required for refresh indicators
   @override
   void initState() {
     super.initState();
@@ -54,7 +55,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
     setState(() {});
   }
 
-  // method for parsing text data into program objects for ListView mapping
+  // method for parsing text into Program objects for ListView mapping
   void _parsePrograms(String listName, String rawPrograms) {
     // clear current list
     if (listName == "runningPrograms") {
@@ -73,12 +74,11 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
         String programInfo = strPrograms[i];
         List<String> programParts = programInfo.trim().split(' ');
 
-        // remove unnecessary characters
+        // remove unnecessary characters (," )
         programParts[0] = programParts[0].replaceAll('"', '');
         programParts[1] = programParts[1].replaceAll('"', '');
         programParts[1] = programParts[1].replaceAll(',', '');
 
-        // create objects for storing data about each program
         Program currentProgram = new Program(
             filePath: programParts[0],
             fileName: programParts[0].split('/').last,
@@ -104,10 +104,10 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
           child: HHAppBar(title: 'Program Manager', scaffoldKey: _scaffoldKey)),
       body: SafeArea(
         child: Column(children: [
+          // refresh program lists button
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              // refresh program lists button
               IconButton(
                   iconSize: 30.0,
                   icon: const Icon(
@@ -155,6 +155,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                             // parse running programs into mappable List of objects
                             _parsePrograms("runningPrograms", snapshot.data);
 
+                            // display icon/message to user if no programs are present
                             if (runningPrograms.isNotEmpty) {
                               return ListView(
                                 children: runningPrograms
@@ -194,7 +195,9 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                   title:
                                                       Text("Program Commands"),
                                                   content: Text(
-                                                      "What would you like to do with this program?"),
+                                                      "What would you like to do with this program?\n\n" +
+                                                          currentProgram
+                                                              .fileName),
                                                   actions: [
                                                     FlatButton(
                                                       onPressed: () async {
@@ -246,7 +249,6 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                     .toList(),
                               );
                             } else {
-                              // running programs lists is empty, display to user
                               return Row(
                                 children: [
                                   Icon(
@@ -335,6 +337,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                             // parse paused programs into mappable List of objects
                             _parsePrograms("pausedPrograms", snapshot.data);
 
+                            // display icon/message to user if no programs are present
                             if (pausedPrograms.isNotEmpty) {
                               return ListView(
                                 children: pausedPrograms
@@ -374,7 +377,9 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                   title:
                                                       Text("Program Commands"),
                                                   content: Text(
-                                                      "What would you like to do with this program?"),
+                                                      "What would you like to do with this program?\n\n" +
+                                                          currentProgram
+                                                              .fileName),
                                                   actions: [
                                                     FlatButton(
                                                       onPressed: () async {
@@ -426,7 +431,6 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                     .toList(),
                               );
                             } else {
-                              // paused programs lists is empty, display to user
                               return Row(
                                 children: [
                                   Icon(
@@ -464,14 +468,38 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                   ]),
             ),
           ),
-          Center(
-              child: FlatButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            color: Colors.grey[300],
-            child: Text(("Home Page")),
-          )),
+          // Buttons - Stop All & Restart All Programs
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              FlatButton(
+                onPressed: () async {
+                  var output = await http.postProgramCommand(
+                      restURL: 'api/program_command',
+                      postBody: {
+                        "command": "stop_ALLprograms",
+                        "program": "ALLprograms"
+                      });
+                  setState(() {});
+                },
+                color: Colors.grey[300],
+                child: Text(("Stop ALL")),
+              ),
+              FlatButton(
+                onPressed: () async {
+                  var output = await http.postProgramCommand(
+                      restURL: 'api/program_command',
+                      postBody: {
+                        "command": "restart_ALLprograms",
+                        "program": "ALLprograms"
+                      });
+                  setState(() {});
+                },
+                color: Colors.grey[300],
+                child: Text(("Restart ALL")),
+              )
+            ],
+          ),
         ]),
       ),
     );
