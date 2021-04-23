@@ -111,10 +111,10 @@ class _LogMainState extends State<LogMain> {
 
   @override
   void initState() {
-    super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refreshIndicatorKey.currentState.show();
     });
+    super.initState();
   }
 
   @override

@@ -27,13 +27,13 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
 
   @override
   void initState() {
-    super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _runningRefreshKey.currentState.show();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _pausedRefreshKey.currentState.show();
     });
+    super.initState();
   }
 
   Widget _showConnectionErrors() {

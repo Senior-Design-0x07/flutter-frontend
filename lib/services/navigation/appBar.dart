@@ -79,6 +79,12 @@ class _HHAppBarState extends State<HHAppBar> {
   }
 
   @override
+  void initState() {
+    _selectIP();
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     _checkIfConnected(60);
     return AppBar(

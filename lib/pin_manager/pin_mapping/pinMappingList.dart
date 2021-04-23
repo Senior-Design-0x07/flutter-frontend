@@ -186,11 +186,11 @@ class _PinMappingState extends State<PinMapping> {
 
   @override
   void initState() {
-    super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refreshIndicatorKey.currentState.show();
     });
     _getPhysicalPins();
+    super.initState();
   }
 
   @override
@@ -270,7 +270,8 @@ class _PinMappingState extends State<PinMapping> {
                                       onPressed: () async {
                                         Navigator.of(context).pop();
                                         httpServiceError = null;
-                                        cmdSuccess = await widget.http.requestNewPin(
+                                        cmdSuccess =
+                                            await widget.http.requestNewPin(
                                           restURL:
                                               'api/pin_manager/request_pin',
                                           postBody: {
