@@ -12,8 +12,8 @@ import 'package:http/http.dart';
 class HttpService {
   final int _timeoutDuration = 5;
   final String _usbURL = "http://192.168.7.2:5000";
-  String _ipURL = "http://192.168.0.66:5000";
   // String _ipURL = "http://192.168.7.2:5000";
+  String _ipURL = "http://192.168.0.66:5000";
 
   /*
       Pin Manager Http Requests
@@ -134,6 +134,30 @@ class HttpService {
   }
 
   /*
+      Program Manager Requests
+  */
+  Future<String> getProgramList({@required var restURL}) async {
+    Response res = await get("$_ipURL/$restURL")
+        .catchError((e) {})
+        .timeout(Duration(seconds: _timeoutDuration));
+    if (res.statusCode == 200) {
+      return res.body;
+    } else {
+      throw Exception('Failed to grab indicated list');
+    }
+  }
+
+  Future<void> postProgramCommand(
+      {@required var restURL, @required dynamic postBody}) async {
+    Response res = await post("$_ipURL/$restURL", body: postBody)
+        .catchError((e) {})
+        .timeout(Duration(seconds: _timeoutDuration));
+    if (res.statusCode != 200) {
+      throw Exception('Failed to post: $postBody to $restURL');
+    }
+  }
+
+  /*
       Wifi Http Requests
   */
   Future<String> getKnownNetworks(
@@ -233,7 +257,6 @@ class HttpService {
       Logging Http Requests
   */
   Future<List<Log>> getBackendLog({@required var restURL}) async {
-    print('$_ipURL');
     Response res = await get("$_ipURL/$restURL")
         .catchError((e) {})
         .timeout(Duration(seconds: 5));
