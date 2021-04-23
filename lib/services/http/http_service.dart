@@ -201,6 +201,34 @@ class HttpService {
     }
   }
 
+  Future<bool> pingBoard() async {
+    if (_ipURL != _usbURL) {
+      Response res = await get("$_ipURL/api/wifi_request/ping")
+          .catchError((e) {
+            print("hey1");
+          })
+          .timeout(Duration(seconds: _timeoutDuration))
+          .catchError((e) {
+            print("hey2");
+          });
+      return res != null
+          ? res.statusCode == 200
+              ? true
+              : false
+          : false;
+    } else {
+      Response res = await get("$_usbURL/api/wifi_request/ping")
+          .catchError((e) {})
+          .timeout(Duration(seconds: _timeoutDuration))
+          .catchError((e) {});
+      return res != null
+          ? res.statusCode == 200
+              ? true
+              : false
+          : false;
+    }
+  }
+
   /*
       Logging Http Requests
   */

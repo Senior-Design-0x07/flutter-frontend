@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:hobby_hub_ui/services/http/http_service.dart';
-import 'package:hobby_hub_ui/services/navigation/appBar.dart';
-import 'package:hobby_hub_ui/services/navigation/navDrawer.dart';
 
 class WifiPage extends StatefulWidget {
   final HttpService http;
 
-  WifiPage({@required this.http});
+  WifiPage({Key key, @required this.http}) : super(key: key);
 
   @override
   _WifiPageState createState() => _WifiPageState();
 }
 
 class _WifiPageState extends State<WifiPage> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
-
   String ssid = "";
   String password = "";
   bool scanBtn = false;
@@ -22,12 +18,7 @@ class _WifiPageState extends State<WifiPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
       backgroundColor: Colors.white,
-      drawer: NavigationDrawer(),
-      appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: HHAppBar(title: 'WiFi', http: widget.http, scaffoldKey: _scaffoldKey)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(10.0),

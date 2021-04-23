@@ -1,31 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:hobby_hub_ui/services/http/http_service.dart';
 import 'package:hobby_hub_ui/services/logging/logMain.dart';
-import 'package:hobby_hub_ui/services/navigation/appBar.dart';
-import 'package:hobby_hub_ui/services/navigation/navDrawer.dart';
 
 class Home extends StatefulWidget {
   final HttpService http;
 
-  Home({@required this.http});
+  Home({Key key, @required this.http}) : super(key: key);
 
   @override
   _HomeState createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> {
-  GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
       backgroundColor: Colors.white,
-      drawer: NavigationDrawer(),
-      appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: HHAppBar(
-              title: 'Hobby Hub Home', http: widget.http, scaffoldKey: _scaffoldKey)),
       body: Column(
         children: [
           Container(
@@ -40,7 +31,9 @@ class _HomeState extends State<Home> {
           SizedBox(
             height: 50,
           ),
-          LogMain(http: widget.http,)
+          LogMain(
+            http: widget.http,
+          )
         ],
       ),
     );

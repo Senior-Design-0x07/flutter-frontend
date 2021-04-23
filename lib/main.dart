@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hobby_hub_ui/services/navigation/routes.dart' as router;
+import 'package:hobby_hub_ui/services/navigation/navController.dart';
 
 void main() => runApp(HHApp());
 
@@ -20,8 +20,7 @@ class _HHApp extends State<HHApp> {
         backgroundColor: Colors.white,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      initialRoute: router.HomeRoute,
-      onGenerateRoute: router.getRoutes,
+      home: NavigationController(),
     );
   }
 }

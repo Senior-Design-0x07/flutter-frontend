@@ -4,7 +4,7 @@ import 'package:hobby_hub_ui/services/error/error_service.dart';
 import 'package:hobby_hub_ui/services/http/http_service.dart';
 import 'package:hobby_hub_ui/models/log.dart';
 import 'logItem.dart';
-import 'package:hobby_hub_ui/services/navigation/routes.dart' as router;
+import 'package:hobby_hub_ui/services/navigation/navController.dart';
 
 class LogMain extends StatefulWidget {
   final HttpService http;
@@ -29,7 +29,7 @@ class _LogMainState extends State<LogMain> {
   void _grabLogPeriodically(int numSeconds) {
     if (_timer == null || !_timer.isActive) {
       _timer = Timer.periodic(Duration(seconds: numSeconds), (Timer t) {
-        if (router.routeSettings.name == router.HomeRoute) {
+        if (NavigationController.selectedIndex == 0) {
           _refresh();
         }
       });
@@ -83,7 +83,9 @@ class _LogMainState extends State<LogMain> {
   }
 
   Future<void> _refresh() {
-    return widget.http.getBackendLog(restURL: 'api/logging/get').then((__logData) {
+    return widget.http
+        .getBackendLog(restURL: 'api/logging/get')
+        .then((__logData) {
       _connection = true;
       if (!_clearButton) {
         if (__logData.isNotEmpty) {
