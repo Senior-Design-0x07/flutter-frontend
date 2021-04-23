@@ -3,23 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:hobby_hub_ui/services/http/http_service.dart';
 import 'package:hobby_hub_ui/pin_manager/pin_mapping/pinMappingList.dart';
-import 'package:hobby_hub_ui/services/navigation/appBar.dart';
-import 'package:hobby_hub_ui/services/navigation/navDrawer.dart';
 
 class PinMain extends StatelessWidget {
-  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
-  final HttpService http = new HttpService();
+  final HttpService http;
+
+  PinMain({Key key, @required this.http}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     if (kIsWeb) {
       return Scaffold(
-        key: _scaffoldKey,
         backgroundColor: Colors.white,
-        drawer: NavigationDrawer(),
-        appBar: PreferredSize(
-            preferredSize: const Size.fromHeight(60),
-            child: HHAppBar(title: 'Pin Manager', scaffoldKey: _scaffoldKey)),
         body: SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.all(10.0),
@@ -35,7 +29,9 @@ class PinMain extends StatelessWidget {
                   ),
                 ),
                 Container(
-                    height: 350, width: double.infinity, child: PinMapping()),
+                    height: 350,
+                    width: double.infinity,
+                    child: PinMapping(http: http)),
               ],
             ),
           ),
@@ -43,12 +39,7 @@ class PinMain extends StatelessWidget {
       );
     } else if (Platform.isAndroid) {
       return Scaffold(
-        key: _scaffoldKey,
         backgroundColor: Colors.white,
-        drawer: NavigationDrawer(),
-        appBar: PreferredSize(
-            preferredSize: const Size.fromHeight(60),
-            child: HHAppBar(title: 'Pin Manager', scaffoldKey: _scaffoldKey)),
         body: SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.all(10.0),
@@ -64,7 +55,11 @@ class PinMain extends StatelessWidget {
                   ),
                 ),
                 Container(
-                    height: 350, width: double.infinity, child: PinMapping()),
+                    height: 350,
+                    width: double.infinity,
+                    child: PinMapping(
+                      http: http,
+                    )),
               ],
             ),
           ),

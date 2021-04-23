@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:hobby_hub_ui/services/http/http_service.dart';
-import 'package:hobby_hub_ui/services/navigation/appBar.dart';
-import 'package:hobby_hub_ui/services/navigation/navDrawer.dart';
 
 class WifiPage extends StatefulWidget {
+  final HttpService http;
+
+  WifiPage({Key key, @required this.http}) : super(key: key);
+
   @override
   _WifiPageState createState() => _WifiPageState();
 }
 
 class _WifiPageState extends State<WifiPage> {
-  final HttpService http = new HttpService();
-  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
-
   String ssid = "";
   String password = "";
   bool scanBtn = false;
@@ -19,12 +18,7 @@ class _WifiPageState extends State<WifiPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
       backgroundColor: Colors.white,
-      drawer: NavigationDrawer(),
-      appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: HHAppBar(title: 'WiFi', scaffoldKey: _scaffoldKey)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(10.0),
@@ -38,7 +32,7 @@ class _WifiPageState extends State<WifiPage> {
                       width: double.infinity,
                       child: scanBtn
                           ? FutureBuilder(
-                              future: http.getKnownNetworks(
+                              future: widget.http.getKnownNetworks(
                                   restURL: 'api/wifi_request', cmd: 'scan'),
                               builder: (BuildContext context,
                                   AsyncSnapshot snapshot) {
@@ -138,7 +132,7 @@ class _WifiPageState extends State<WifiPage> {
                   new Container(
                     child: RaisedButton(
                       onPressed: () async {
-                        await http.postSelectedNetwork(
+                        await widget.http.postSelectedNetwork(
                             restURL: 'api/wifi_request',
                             postBody: {"ssid": ssid, "password": password});
                         setState(() {});
@@ -149,7 +143,7 @@ class _WifiPageState extends State<WifiPage> {
                   new Container(
                     child: RaisedButton(
                       onPressed: () async {
-                        await http.getClearNetwork(
+                        await widget.http.getClearNetwork(
                             restURL: 'api/wifi_request', cmd: 'clear');
                       },
                       child: Text('Clear Saved Network'),

@@ -1,31 +1,30 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:hobby_hub_ui/models/program.dart';
-import 'dart:convert';
-
+import 'package:hobby_hub_ui/services/error/error_service.dart';
 import 'package:hobby_hub_ui/services/http/http_service.dart';
-import 'package:hobby_hub_ui/services/navigation/appBar.dart';
-import 'package:hobby_hub_ui/services/navigation/navDrawer.dart';
 
 class ProgramManagerPage extends StatefulWidget {
+  final HttpService http;
+
+  ProgramManagerPage({Key key, @required this.http}) : super(key: key);
+
   @override
   _ProgramManagerPageState createState() => _ProgramManagerPageState();
 }
 
 class _ProgramManagerPageState extends State<ProgramManagerPage> {
-  // local lists for keeping track of current running/paused programs
   List<Program> runningPrograms = List<Program>.empty(growable: true);
   List<Program> pausedPrograms = List<Program>.empty(growable: true);
-  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
-  final HttpService http = new HttpService();
-
-  // key for saving/refreshing state of program lists
   final GlobalKey<RefreshIndicatorState> _runningRefreshKey =
       new GlobalKey<RefreshIndicatorState>();
-
   final GlobalKey<RefreshIndicatorState> _pausedRefreshKey =
       new GlobalKey<RefreshIndicatorState>();
+  bool cmdSuccess = false;
+  bool connection = true;
+  List<String> connectionError;
+  String httpServiceError;
 
-  // required for refresh indicators
   @override
   void initState() {
     super.initState();
@@ -37,22 +36,75 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
     });
   }
 
+  Widget _showConnectionErrors() {
+    switch (connectionError[0]) {
+      case 'Timeout':
+        return HHError(
+            title: connectionError[0] + " Exception",
+            message: "Can't Connect",
+            type: 0);
+      default:
+        return HHError(
+            title: "Exception",
+            message: "A connection error has ocurred",
+            type: 0);
+    }
+  }
+
+  Widget _showHttpServiceErrors() {
+    switch (httpServiceError.split(":")[0]) {
+      case 'Exception': //Generic Exceptions from HTTP_SERVICE
+        return HHError(
+            title: httpServiceError.split(":")[0],
+            message: httpServiceError.split("Exception: ")[1],
+            type: 0);
+      default:
+        return HHError(
+            title: "Exception", message: "An error has ocurred", type: 0);
+    }
+  }
+
+  void _handleErrors(Object error) {
+    setState(() {
+      error.toString().split("Exception")[0] == "Timeout"
+          ? connection = false
+          : connection = true;
+      error.toString().split("Exception")[0] != ""
+          ? this.connectionError = error.toString().split("Exception")
+          : this.httpServiceError = error.toString();
+    });
+  }
+
   // refresh indicator method - get running programs list for ListView widget
   Future<void> _refreshRunning() async {
-    String rawRunningPrograms = await http.getProgramList(
-        restURL: 'api/program_manager/running_programs');
-
-    _parsePrograms("runningPrograms", rawRunningPrograms);
-    setState(() {});
+    httpServiceError = null;
+    return await widget.http
+        .getProgramList(restURL: 'api/program_manager/running_programs')
+        .then((_pausedPrograms) {
+      connection = true;
+      if (_pausedPrograms.isNotEmpty) {
+        _parsePrograms("runningPrograms", _pausedPrograms);
+        setState(() {});
+      }
+    }).catchError((Object error) {
+      _handleErrors(error);
+    });
   }
 
   // refresh indicator method - get paused programs list for ListView widget
   Future<void> _refreshPaused() async {
-    String rawPausedPrograms = await http.getProgramList(
-        restURL: 'api/program_manager/paused_programs');
-
-    _parsePrograms("pausedPrograms", rawPausedPrograms);
-    setState(() {});
+    httpServiceError = null;
+    return await widget.http
+        .getProgramList(restURL: 'api/program_manager/paused_programs')
+        .then((_pausedPrograms) {
+      connection = true;
+      if (_pausedPrograms.isNotEmpty) {
+        _parsePrograms("pausedPrograms", _pausedPrograms);
+        setState(() {});
+      }
+    }).catchError((Object error) {
+      _handleErrors(error);
+    });
   }
 
   // method for parsing text into Program objects for ListView mapping
@@ -96,68 +148,67 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
       backgroundColor: Colors.white,
-      drawer: NavigationDrawer(),
-      appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: HHAppBar(title: 'Program Manager', scaffoldKey: _scaffoldKey)),
       body: SafeArea(
-        child: Column(children: [
-          // refresh program lists button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              IconButton(
-                  iconSize: 30.0,
-                  icon: const Icon(
-                    Icons.refresh,
-                    color: Colors.amber,
-                    size: 30.0,
+        child: SingleChildScrollView(
+          child: Column(children: [
+            if (!connection && connectionError != null)
+              _showConnectionErrors(), // Connection Errors
+            if (httpServiceError != null) _showHttpServiceErrors(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 65,
+                ),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Running Programs',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.black,
+                      ),
+                    ),
                   ),
-                  tooltip: 'Refresh Running Programs',
-                  onPressed: () {
-                    _runningRefreshKey.currentState.show();
-                  }),
-            ],
-          ),
-          Text(
-            'Running Programs',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-              color: Colors.black,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  child: IconButton(
+                      iconSize: 30.0,
+                      icon: const Icon(
+                        Icons.refresh,
+                        color: Colors.amber,
+                        size: 30.0,
+                      ),
+                      tooltip: 'Refresh Running Programs',
+                      onPressed: () {
+                        _runningRefreshKey.currentState.show();
+                      }),
+                ),
+              ],
             ),
-          ),
-          const Divider(
-            height: 10,
-            thickness: 5,
-            indent: 20,
-            endIndent: 20,
-          ),
-          SingleChildScrollView(
-            padding: EdgeInsets.all(10.0),
-            child: RefreshIndicator(
-              key: _runningRefreshKey,
-              onRefresh: _refreshRunning,
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      height: 225,
-                      width: double.infinity,
-                      child: FutureBuilder(
-                        future: http.getProgramList(
-                            restURL: 'api/program_manager/running_programs'),
-                        builder:
-                            (BuildContext context, AsyncSnapshot snapshot) {
-                          if (snapshot.hasData) {
-                            // parse running programs into mappable List of objects
-                            _parsePrograms("runningPrograms", snapshot.data);
-
-                            // display icon/message to user if no programs are present
-                            if (runningPrograms.isNotEmpty) {
-                              return ListView(
+            const Divider(
+              height: 10,
+              thickness: 5,
+              indent: 20,
+              endIndent: 20,
+            ),
+            SingleChildScrollView(
+              padding: EdgeInsets.all(10.0),
+              child: RefreshIndicator(
+                key: _runningRefreshKey,
+                onRefresh: _refreshRunning,
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        height: 225,
+                        width: double.infinity,
+                        child: runningPrograms.isNotEmpty
+                            ? ListView(
                                 children: runningPrograms
                                     .map(
                                       (Program currentProgram) => ListTile(
@@ -201,7 +252,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                   actions: [
                                                     FlatButton(
                                                       onPressed: () async {
-                                                        var output = await http
+                                                        await widget.http
                                                             .postProgramCommand(
                                                                 restURL:
                                                                     'api/program_manager/pause_program',
@@ -218,7 +269,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                     ),
                                                     FlatButton(
                                                       onPressed: () async {
-                                                        var output = await http
+                                                        await widget.http
                                                             .postProgramCommand(
                                                                 restURL:
                                                                     'api/program_manager/stop_program',
@@ -247,9 +298,9 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                       ),
                                     )
                                     .toList(),
-                              );
-                            } else {
-                              return Row(
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
                                     Icons.info,
@@ -265,242 +316,229 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                     ),
                                   ),
                                 ],
-                              );
-                            }
-                          }
-                          return Column(
-                            children: [
-                              SizedBox(
-                                height: 25,
                               ),
-                              Text("Grabbing List of Running Programs"),
-                              SizedBox(
-                                height: 20,
-                              ),
-                              Center(child: CircularProgressIndicator()),
-                            ],
-                          );
-                        },
                       ),
-                    ),
-                  ]),
-            ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              // refresh program lists button
-              IconButton(
-                  iconSize: 30.0,
-                  icon: const Icon(
-                    Icons.refresh,
-                    color: Colors.amber,
-                    size: 30.0,
-                  ),
-                  tooltip: 'Refresh Paused Programs',
-                  onPressed: () {
-                    _pausedRefreshKey.currentState.show();
-                  }),
-            ],
-          ),
-          Text(
-            'Paused Programs',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-              color: Colors.black,
-            ),
-          ),
-          const Divider(
-            height: 10,
-            thickness: 5,
-            indent: 20,
-            endIndent: 20,
-          ),
-          SingleChildScrollView(
-            padding: EdgeInsets.all(10.0),
-            child: RefreshIndicator(
-              key: _pausedRefreshKey,
-              onRefresh: _refreshPaused,
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      height: 225,
-                      width: double.infinity,
-                      child: FutureBuilder(
-                        future: http.getProgramList(
-                            restURL: 'api/program_manager/paused_programs'),
-                        builder:
-                            (BuildContext context, AsyncSnapshot snapshot) {
-                          if (snapshot.hasData) {
-                            // parse paused programs into mappable List of objects
-                            _parsePrograms("pausedPrograms", snapshot.data);
-
-                            // display icon/message to user if no programs are present
-                            if (pausedPrograms.isNotEmpty) {
-                              return ListView(
-                                children: pausedPrograms
-                                    .map(
-                                      (Program currentProgram) => ListTile(
-                                        title: Text(currentProgram.fileName),
-                                        subtitle: Column(
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Text("Path: "),
-                                                Text(
-                                                  currentProgram.filePath,
-                                                  style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold),
-                                                ),
-                                              ],
-                                            ),
-                                            Row(
-                                              children: [
-                                                Text("Process ID: "),
-                                                Text(
-                                                  currentProgram.processID
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                        onTap: () => showDialog(
-                                            context: context,
-                                            builder: (_) => AlertDialog(
-                                                  title:
-                                                      Text("Program Commands"),
-                                                  content: Text(
-                                                      "What would you like to do with this program?\n\n" +
-                                                          currentProgram
-                                                              .fileName),
-                                                  actions: [
-                                                    FlatButton(
-                                                      onPressed: () async {
-                                                        var output = await http
-                                                            .postProgramCommand(
-                                                                restURL:
-                                                                    'api/program_manager/continue_program',
-                                                                postBody: {
-                                                              "program":
-                                                                  currentProgram
-                                                                      .fileName
-                                                            });
-                                                        setState(() {});
-                                                        Navigator.of(context)
-                                                            .pop();
-                                                      },
-                                                      child: Text(("Continue")),
-                                                    ),
-                                                    FlatButton(
-                                                      onPressed: () async {
-                                                        var output = await http
-                                                            .postProgramCommand(
-                                                                restURL:
-                                                                    'api/program_manager/stop_program',
-                                                                postBody: {
-                                                              "program":
-                                                                  currentProgram
-                                                                      .fileName
-                                                            });
-                                                        setState(() {});
-                                                        Navigator.of(context)
-                                                            .pop();
-                                                      },
-                                                      child: Text(("Stop")),
-                                                    ),
-                                                    FlatButton(
-                                                      onPressed: () {
-                                                        Navigator.of(context)
-                                                            .pop();
-                                                      },
-                                                      child: Text(
-                                                          ("Close Window")),
-                                                    )
-                                                  ],
-                                                ),
-                                            barrierDismissible: false),
-                                      ),
-                                    )
-                                    .toList(),
-                              );
-                            } else {
-                              return Row(
-                                children: [
-                                  Icon(
-                                    Icons.info,
-                                    color: Colors.green,
-                                    size: 30.0,
-                                  ),
-                                  Text(
-                                    "NO PAUSED PROGRAMS",
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ],
-                              );
-                            }
-                          }
-                          return Column(
-                            children: [
-                              SizedBox(
-                                height: 25,
-                              ),
-                              Text("Grabbing List of Paused Programs"),
-                              SizedBox(
-                                height: 20,
-                              ),
-                              Center(child: CircularProgressIndicator()),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                  ]),
-            ),
-          ),
-          // Buttons - Stop All & Restart All Programs
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              FlatButton(
-                onPressed: () async {
-                  var output = await http.postProgramCommand(
-                      restURL: 'api/program_command',
-                      postBody: {
-                        "command": "stop_ALLprograms",
-                        "program": "ALLprograms"
-                      });
-                  setState(() {});
-                },
-                color: Colors.grey[300],
-                child: Text(("Stop ALL")),
+                    ]),
               ),
-              FlatButton(
-                onPressed: () async {
-                  var output = await http.postProgramCommand(
-                      restURL: 'api/program_command',
-                      postBody: {
-                        "command": "restart_ALLprograms",
-                        "program": "ALLprograms"
-                      });
-                  setState(() {});
-                },
-                color: Colors.grey[300],
-                child: Text(("Restart ALL")),
-              )
-            ],
-          ),
-        ]),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                SizedBox(
+                  width: 65,
+                ),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Paused Programs',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10.0),
+                  child: IconButton(
+                      iconSize: 30.0,
+                      icon: const Icon(
+                        Icons.refresh,
+                        color: Colors.amber,
+                        size: 30.0,
+                      ),
+                      tooltip: 'Refresh Paused Programs',
+                      onPressed: () {
+                        _pausedRefreshKey.currentState.show();
+                      }),
+                ),
+              ],
+            ),
+            const Divider(
+              height: 10,
+              thickness: 5,
+              indent: 20,
+              endIndent: 20,
+            ),
+            SingleChildScrollView(
+              padding: EdgeInsets.all(10.0),
+              child: RefreshIndicator(
+                key: _pausedRefreshKey,
+                onRefresh: _refreshPaused,
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                          height: 225,
+                          width: double.infinity,
+                          child: pausedPrograms.isNotEmpty
+                              ? ListView(
+                                  children: pausedPrograms
+                                      .map(
+                                        (Program currentProgram) => ListTile(
+                                          title: Text(currentProgram.fileName),
+                                          subtitle: Column(
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Text("Path: "),
+                                                  Text(
+                                                    currentProgram.filePath,
+                                                    style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                ],
+                                              ),
+                                              Row(
+                                                children: [
+                                                  Text("Process ID: "),
+                                                  Text(
+                                                    currentProgram.processID
+                                                        .toString(),
+                                                    style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                          onTap: () => showDialog(
+                                              context: context,
+                                              builder: (_) => AlertDialog(
+                                                    title: Text(
+                                                        "Program Commands"),
+                                                    content: Text(
+                                                        "What would you like to do with this program?\n\n" +
+                                                            currentProgram
+                                                                .fileName),
+                                                    actions: [
+                                                      FlatButton(
+                                                        onPressed: () async {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                          this.httpServiceError =
+                                                              null;
+                                                          await widget.http
+                                                              .postProgramCommand(
+                                                                  restURL:
+                                                                      'api/program_manager/continue_program',
+                                                                  postBody: {
+                                                                "program":
+                                                                    currentProgram
+                                                                        .fileName
+                                                              }).catchError(
+                                                                  (Object
+                                                                      error) {
+                                                            _handleErrors(
+                                                                error);
+                                                          });
+                                                          setState(() {});
+                                                        },
+                                                        child:
+                                                            Text(("Continue")),
+                                                      ),
+                                                      FlatButton(
+                                                        onPressed: () async {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                          this.httpServiceError =
+                                                              null;
+                                                          await widget.http
+                                                              .postProgramCommand(
+                                                                  restURL:
+                                                                      'api/program_manager/stop_program',
+                                                                  postBody: {
+                                                                "program":
+                                                                    currentProgram
+                                                                        .fileName
+                                                              }).catchError(
+                                                                  (Object
+                                                                      error) {
+                                                            _handleErrors(
+                                                                error);
+                                                          });
+                                                          setState(() {});
+                                                        },
+                                                        child: Text(("Stop")),
+                                                      ),
+                                                      FlatButton(
+                                                        onPressed: () {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                        },
+                                                        child: Text(
+                                                            ("Close Window")),
+                                                      )
+                                                    ],
+                                                  ),
+                                              barrierDismissible: false),
+                                        ),
+                                      )
+                                      .toList(),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.info,
+                                      color: Colors.green,
+                                      size: 30.0,
+                                    ),
+                                    Text(
+                                      "NO PAUSED PROGRAMS",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ],
+                                )),
+                    ]),
+              ),
+            ),
+            // Buttons - Stop All & Restart All Programs
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                FlatButton(
+                  onPressed: () async {
+                    this.httpServiceError = null;
+                    await widget.http.postProgramCommand(
+                        restURL: 'api/program_manager/stop_ALLprograms',
+                        postBody: {
+                          "program": "ALLprograms"
+                        }).catchError((Object error) {
+                      _handleErrors(error);
+                    });
+                    setState(() {});
+                  },
+                  color: Colors.grey[300],
+                  child: Text(("Stop ALL")),
+                ),
+                FlatButton(
+                  onPressed: () async {
+                    this.httpServiceError = null;
+                    await widget.http.postProgramCommand(
+                        restURL: 'api/program_manager/restart_ALLprograms',
+                        postBody: {
+                          "program": "ALLprograms"
+                        }).catchError((Object error) {
+                      _handleErrors(error);
+                    });
+                    setState(() {});
+                  },
+                  color: Colors.grey[300],
+                  child: Text(("Restart ALL")),
+                )
+              ],
+            ),
+          ]),
+        ),
       ),
     );
   }
