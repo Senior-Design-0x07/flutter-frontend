@@ -16,59 +16,17 @@ final HttpService http = HttpService();
 
 Route<dynamic> getRoutes(RouteSettings settings) {
   routeSettings = settings;
-  http.selectCurrentIP();
   switch (settings.name) {
     case HomeRoute:
-      return MaterialPageRoute(builder: (context) => Home());
+      return MaterialPageRoute(builder: (context) => Home(http:http));
     case WifiRoute:
-      return MaterialPageRoute(builder: (context) => WifiPage());
+      return MaterialPageRoute(builder: (context) => WifiPage(http: http));
     case PinManagerRoute:
       return MaterialPageRoute(builder: (context) => PinMain(http: http));
     case ProgramManagerRoute:
-      return MaterialPageRoute(builder: (context) => ProgramManagerPage());
+      return MaterialPageRoute(builder: (context) => ProgramManagerPage(http: http));
     default:
       return MaterialPageRoute(
           builder: (context) => UndefinedRoute(name: settings.name));
   }
-}
-
-bool _tempIP = false;
-bool _usingIP = false;
-bool _connection = true;
-
-void _handleErrors() {
-  _connection = false;
-}
-
-//Used with App Bar to update correct HTTP service
-Widget updateIP() {
-  return IconButton(
-      iconSize: 30.0,
-      icon: _connection
-          ? _usingIP
-              ? Icon(
-                  Icons.wifi,
-                  color: Colors.white,
-                  size: 30.0,
-                )
-              : Icon(
-                  Icons.wifi_off,
-                  color: Colors.redAccent[700],
-                  size: 30.0,
-                )
-          : Icon(
-              Icons.perm_scan_wifi_outlined,
-              color: Colors.yellowAccent[400],
-              size: 33.0,
-            ),
-      tooltip: _connection ? 'WiFi' : 'No Comunication With Board',
-      onPressed: () async {
-        _connection = true;
-        _tempIP = await http.selectCurrentIP().catchError((Object error) {
-          _handleErrors();
-        });
-        if (_tempIP != _usingIP && _tempIP != null) {
-          _usingIP = _tempIP;
-        }
-      });
 }

@@ -7,6 +7,10 @@ import 'logItem.dart';
 import 'package:hobby_hub_ui/services/navigation/routes.dart' as router;
 
 class LogMain extends StatefulWidget {
+  final HttpService http;
+
+  LogMain({@required this.http});
+
   @override
   _LogMainState createState() => _LogMainState();
 }
@@ -14,7 +18,6 @@ class LogMain extends StatefulWidget {
 class _LogMainState extends State<LogMain> {
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
       new GlobalKey<RefreshIndicatorState>();
-  final HttpService http = HttpService();
   List<Log> _logData = [];
   bool _cmdSuccess = true;
   bool _clearButton = false;
@@ -80,7 +83,7 @@ class _LogMainState extends State<LogMain> {
   }
 
   Future<void> _refresh() {
-    return http.getBackendLog(restURL: 'api/logging/get').then((__logData) {
+    return widget.http.getBackendLog(restURL: 'api/logging/get').then((__logData) {
       _connection = true;
       if (!_clearButton) {
         if (__logData.isNotEmpty) {
@@ -155,7 +158,7 @@ class _LogMainState extends State<LogMain> {
                             onPressed: () async {
                               _clearButton = true;
                               if (_connection) {
-                                _cmdSuccess = await http
+                                _cmdSuccess = await widget.http
                                     .clearBackendLog(
                                         restURL: "api/logging/clear")
                                     .catchError((Object error) {

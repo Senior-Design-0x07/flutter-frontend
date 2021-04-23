@@ -3,7 +3,7 @@ import 'package:hobby_hub_ui/services/navigation/routes.dart' as router;
 
 class UndefinedRoute extends StatelessWidget {
   final String name;
-
+  
   const UndefinedRoute({Key key, this.name}) : super(key: key);
 
   @override
@@ -18,8 +18,7 @@ class UndefinedRoute extends StatelessWidget {
               SizedBox(height: 15),
               FlatButton(
                   onPressed: () async {
-                    Navigator.pushReplacementNamed(
-                        context, router.HomeRoute);
+                    Navigator.pushReplacementNamed(context, router.HomeRoute);
                   },
                   child: Text("Home Page"))
             ],

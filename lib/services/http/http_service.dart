@@ -12,13 +12,13 @@ import 'package:http/http.dart';
 class HttpService {
   final int _timeoutDuration = 5;
   final String _usbURL = "http://192.168.7.2:5000";
-  String _ipURL = "http://192.168.7.2:5000";
+  String _ipURL = "http://192.168.0.66:5000";
+  // String _ipURL = "http://192.168.7.2:5000";
 
   /*
       Pin Manager Http Requests
   */
   Future<List<Pin>> getPinList({@required var restURL}) async {
-    print("IP: " + _ipURL);
     Response res = await get("$_ipURL/$restURL")
         .catchError((e) {})
         .timeout(Duration(seconds: _timeoutDuration));
@@ -166,7 +166,7 @@ class HttpService {
 
   Future<bool> selectCurrentIP() async {
     Response res;
-    _ipURL != null
+    _ipURL != _usbURL
         ? res = await get("$_ipURL/api/wifi_request/ping")
             .catchError((e) {})
             .timeout(Duration(seconds: _timeoutDuration))
@@ -174,7 +174,7 @@ class HttpService {
             .catchError((e) {})
             .timeout(Duration(seconds: _timeoutDuration));
     if (res.statusCode == 200) {
-      _ipURL != null
+      _ipURL != _usbURL
           ? json.decode(res.body) == true
               ? res = await get("$_ipURL/api/wifi_request/get_ip")
                   .catchError((e) {})
@@ -190,7 +190,6 @@ class HttpService {
         boardIp != ""
             ? _ipURL = 'http://' + boardIp + ':5000'
             : _ipURL = _usbURL;
-        print(_ipURL);
         return true;
       } else {
         _ipURL = _usbURL;
@@ -206,6 +205,7 @@ class HttpService {
       Logging Http Requests
   */
   Future<List<Log>> getBackendLog({@required var restURL}) async {
+    print('$_ipURL');
     Response res = await get("$_ipURL/$restURL")
         .catchError((e) {})
         .timeout(Duration(seconds: 5));

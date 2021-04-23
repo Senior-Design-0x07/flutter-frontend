@@ -22,7 +22,7 @@ class PinMain extends StatelessWidget {
         appBar: PreferredSize(
             preferredSize: const Size.fromHeight(60),
             child: HHAppBar(
-                title: 'Pin Manager', scaffoldKey: _scaffoldKey)),
+                title: 'Pin Manager', http: http, scaffoldKey: _scaffoldKey)),
         body: SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.all(10.0),
@@ -54,7 +54,7 @@ class PinMain extends StatelessWidget {
         appBar: PreferredSize(
             preferredSize: const Size.fromHeight(60),
             child: HHAppBar(
-                title: 'Pin Manager', scaffoldKey: _scaffoldKey)),
+                title: 'Pin Manager', http: http, scaffoldKey: _scaffoldKey)),
         body: SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.all(10.0),

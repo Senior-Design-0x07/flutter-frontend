@@ -5,12 +5,16 @@ import 'package:hobby_hub_ui/services/navigation/appBar.dart';
 import 'package:hobby_hub_ui/services/navigation/navDrawer.dart';
 
 class ProgramManagerPage extends StatefulWidget {
+  final HttpService http;
+
+  ProgramManagerPage({@required this.http});
+
   @override
   _ProgramManagerPageState createState() => _ProgramManagerPageState();
 }
 
 class _ProgramManagerPageState extends State<ProgramManagerPage> {
-  final HttpService http = new HttpService();
+  // final HttpService http = new HttpService();
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
 
   @override
@@ -21,7 +25,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
       drawer: NavigationDrawer(),
       appBar: PreferredSize(
           preferredSize: const Size.fromHeight(60),
-          child: HHAppBar(title: 'Program Manager', scaffoldKey: _scaffoldKey)),
+          child: HHAppBar(title: 'Program Manager', http: widget.http, scaffoldKey: _scaffoldKey)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(10.0),

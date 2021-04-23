@@ -1,18 +1,77 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:hobby_hub_ui/services/http/http_service.dart';
-import 'package:hobby_hub_ui/services/navigation/routes.dart' as router;
 
 class HHAppBar extends StatefulWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
   final String title;
+  final HttpService http;
 
-  HHAppBar({@required this.title, @required this.scaffoldKey});
+  HHAppBar(
+      {@required this.title, @required this.http, @required this.scaffoldKey});
 
   @override
   _HHAppBarState createState() => _HHAppBarState();
 }
 
 class _HHAppBarState extends State<HHAppBar> {
+  bool _tempIP = false;
+  bool _usingIP = false;
+  bool _connection = true;
+  // Timer _timer;
+
+  // void _checkIfConnected(int numSeconds) {
+  //   if (_timer == null || !_timer.isActive) {
+  //     _timer = Timer.periodic(Duration(seconds: numSeconds), (Timer t) {
+  //       return true;
+  //     });
+  //   }
+  // }
+
+  void _handleErrors() {
+    setState(() {
+      _connection = false;
+    });
+  }
+
+  Widget updateIP() {
+    // _checkIfConnected(10);
+    return IconButton(
+        iconSize: 30.0,
+        icon: _connection
+            ? _usingIP
+                ? Icon(
+                    Icons.wifi,
+                    color: Colors.white,
+                    size: 30.0,
+                  )
+                : Icon(
+                    Icons.wifi_off,
+                    color: Colors.redAccent[700],
+                    size: 30.0,
+                  )
+            : Icon(
+                Icons.perm_scan_wifi_outlined,
+                color: Colors.yellowAccent[400],
+                size: 33.0,
+              ),
+        tooltip: _connection ? 'WiFi' : 'No Comunication With Board',
+        onPressed: () async {
+          _connection = true;
+          _usingIP = false;
+          _tempIP =
+              await widget.http.selectCurrentIP().catchError((Object error) {
+            _handleErrors();
+          });
+          if (_tempIP != _usingIP && _tempIP != null) {
+            setState(() {
+              _usingIP = _tempIP;
+            });
+          }
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppBar(
@@ -38,7 +97,7 @@ class _HHAppBarState extends State<HHAppBar> {
       actions: <Widget>[
         Padding(
             padding: const EdgeInsets.fromLTRB(0.0, 0.0, 10.0, 0.0),
-            child: router.updateIP()),
+            child: updateIP()),
       ],
     );
   }
