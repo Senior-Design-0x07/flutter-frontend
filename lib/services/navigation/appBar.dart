@@ -17,6 +17,7 @@ class _HHAppBarState extends State<HHAppBar> {
   bool _tempIP = false;
   bool _usingIP = false;
   bool _connection = false;
+  bool _initialCheck = true;
   Timer _timer;
 
   void _checkIfConnected(int numSeconds) {
@@ -37,6 +38,7 @@ class _HHAppBarState extends State<HHAppBar> {
     _connection = true;
     _usingIP = false;
     _tempIP = await widget.http.selectCurrentIP().catchError((Object error) {
+      print(error.toString());
       _handleErrors();
     });
     if (_tempIP != _usingIP && _tempIP != null) {
@@ -44,6 +46,9 @@ class _HHAppBarState extends State<HHAppBar> {
         _usingIP = _tempIP;
       });
     }
+    // } else if (_initialCheck) {
+    //   setState(() {});
+    // }
   }
 
   void _handleErrors() {
@@ -86,7 +91,11 @@ class _HHAppBarState extends State<HHAppBar> {
 
   @override
   Widget build(BuildContext context) {
-    _checkIfConnected(60);
+    // if (_initialCheck) {
+    //   _selectIP();
+    //   _initialCheck = false;
+    // }
+    _checkIfConnected(45);
     return AppBar(
       backgroundColor: Colors.green,
       elevation: 0,

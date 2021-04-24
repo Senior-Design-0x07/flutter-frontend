@@ -10,10 +10,10 @@ import 'package:http/http.dart';
 // https://flutter.dev/docs/cookbook/networking/fetch-data#2-make-a-network-request
 
 class HttpService {
-  final int _timeoutDuration = 5;
+  final int _timeoutDuration = 10;
   final String _usbURL = "http://192.168.7.2:5000";
-  // String _ipURL = "http://192.168.7.2:5000";
-  String _ipURL = "http://192.168.0.66:5000";
+  String _ipURL = "http://192.168.7.2:5000";
+  // String _ipURL = "http://192.168.0.66:5000";
 
   /*
       Pin Manager Http Requests
@@ -32,17 +32,27 @@ class HttpService {
     }
   }
 
-  Future<List<Map<int, String>>> getPhysicalPins(
+  Future<List<Map<String, String>>> getPhysicalPins(
       {@required var restURL}) async {
     Response res = await get("$_ipURL/$restURL")
         .catchError((e) {})
         .timeout(Duration(seconds: _timeoutDuration));
     if (res.statusCode == 200) {
       List<dynamic> physicalPins = jsonDecode(res.body);
-      List<Map<int, String>> arrangedPhysicalPins = [];
+      List<Map<String, String>> arrangedPhysicalPins = [];
       for (var i = 0; i < physicalPins.length; i++) {
         try {
-          arrangedPhysicalPins.add({physicalPins[i][2]: physicalPins[i][0]});
+          arrangedPhysicalPins.add({
+            (physicalPins[i][2] == 1
+                ? "GPIO"
+                : physicalPins[i][2] == 2
+                    ? "PWM"
+                    : physicalPins[i][2] == 3
+                        ? "I2C"
+                        : physicalPins[i][2] == 4
+                            ? "ANALOG"
+                            : "SPECIAL"): physicalPins[i][0]
+          });
         } catch (e) {
           arrangedPhysicalPins.add({null: physicalPins[i][0]});
         }
@@ -53,8 +63,6 @@ class HttpService {
     }
   }
 
-  // Should be Future<Pin> Eventually
-  // It's bugged on backend, with Analog and i2c pins...
   Future<bool> requestNewPin(
       {@required var restURL, @required Map<String, dynamic> postBody}) async {
     var pinName = postBody.values.toList()[0];
@@ -63,7 +71,9 @@ class HttpService {
           .catchError((e) {})
           .timeout(Duration(seconds: _timeoutDuration));
       if (res.statusCode == 200) {
-        return jsonDecode(res.body) == 'true' ? true : false;
+        return jsonDecode(res.body) == true
+            ? true
+            : throw Exception("Pin ' " + pinName + " ' is already mapped");
       } else {
         throw Exception("Failed to request pin: ' " + pinName + " '");
       }
@@ -80,7 +90,6 @@ class HttpService {
           .catchError((e) {})
           .timeout(Duration(seconds: _timeoutDuration));
       if (res.statusCode == 200) {
-        print(postBody[0]);
         return json.decode(res.body) != null
             ? Pin.fromJson(pinName, jsonDecode(res.body))
             : throw Exception("Failed to grab pin: ' " + pinName + " '");
@@ -101,7 +110,7 @@ class HttpService {
           .catchError((e) {})
           .timeout(Duration(seconds: _timeoutDuration));
       if (res.statusCode == 200) {
-        return jsonDecode(res.body) == 'true' ? true : false;
+        return jsonDecode(res.body) == true ? true : false;
       } else {
         throw Exception("Failed to update pin ' " + pinName + " '");
       }
@@ -110,13 +119,12 @@ class HttpService {
     }
   }
 
-  // Probably won't need this? but here for now
   Future<bool> clearUnusedPins({@required var restURL}) async {
     Response res = await get("$_ipURL/$restURL")
         .catchError((e) {})
         .timeout(Duration(seconds: _timeoutDuration));
     if (res.statusCode == 200) {
-      return jsonDecode(res.body) == 'true' ? true : false;
+      return jsonDecode(res.body) == true ? true : false;
     } else {
       throw Exception('Failed to clear unused pins');
     }
@@ -127,7 +135,7 @@ class HttpService {
         .catchError((e) {})
         .timeout(Duration(seconds: _timeoutDuration));
     if (res.statusCode == 200) {
-      return jsonDecode(res.body) == 'true' ? true : false;
+      return jsonDecode(res.body) == true ? true : false;
     } else {
       throw Exception('Failed to reset pin config');
     }
@@ -275,7 +283,7 @@ class HttpService {
         .catchError((e) {})
         .timeout(Duration(seconds: 5));
     if (res.statusCode == 200) {
-      return jsonDecode(res.body) == 'true' ? true : false;
+      return jsonDecode(res.body) == true ? true : false;
     } else {
       throw Exception('Failed to clear log');
     }

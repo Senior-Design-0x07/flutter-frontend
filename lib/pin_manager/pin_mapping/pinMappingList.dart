@@ -19,8 +19,14 @@ class _PinMappingState extends State<PinMapping> {
   TextEditingController _textFieldController = TextEditingController();
 
   final List<String> _pinOptions = ["GPIO", "PWM", "I2C", "ANALOG", "SPECIAL"];
-  List<Map<int, String>> tempStorage = [];
-  Map<int, List<String>> _physicalPinOptions = {};
+  List<Map<String, String>> tempStorage = [];
+  Map<String, List<String>> _physicalPinOptions = {
+    "GPIO": List<String>.empty(growable: true),
+    "PWM": List<String>.empty(growable: true),
+    "I2C": List<String>.empty(growable: true),
+    "ANALOG": List<String>.empty(growable: true),
+    "SPECIAL": List<String>.empty(growable: true)
+  };
   List<Pin> mappedPins = [];
   String _pinType;
   Pin selectedPin;
@@ -73,6 +79,9 @@ class _PinMappingState extends State<PinMapping> {
       case 4: // Remove All Pins
         return HHError(
             title: 'Remove All', message: 'Remove Pins Error', type: 1);
+      case 5: // Remove All Pins
+        return HHError(
+            title: 'Update Pin', message: 'Update Pin Error', type: 1);
       default:
         return Text('Im Temporary in Button ERRORS!');
     }
@@ -135,43 +144,11 @@ class _PinMappingState extends State<PinMapping> {
   }
 
   void _arrangePhysicalPins() {
-    List<String> list1 = List<String>.empty(growable: true);
-    List<String> list2 = List<String>.empty(growable: true);
-    List<String> list3 = List<String>.empty(growable: true);
-    List<String> list4 = List<String>.empty(growable: true);
-    List<String> list5 = List<String>.empty(growable: true);
-    List<String> list6 = List<String>.empty(growable: true);
-
     for (var i = 0; i < tempStorage.length; i++) {
       tempStorage[i].forEach((pinType, pinName) {
-        switch (pinType) {
-          case 1:
-            list1.add(pinName);
-            break;
-          case 2:
-            list2.add(pinName);
-            break;
-          case 3:
-            list3.add(pinName);
-            break;
-          case 4:
-            list4.add(pinName);
-            break;
-          case 5:
-            list5.add(pinName);
-            break;
-          default:
-            list6.add(pinName);
-            break;
-        }
+        _physicalPinOptions[pinType].add(pinName);
       });
     }
-    _physicalPinOptions[1] = list1;
-    _physicalPinOptions[2] = list2;
-    _physicalPinOptions[3] = list3;
-    _physicalPinOptions[4] = list4;
-    _physicalPinOptions[5] = list5;
-    _physicalPinOptions[null] = list6;
   }
 
   void _getPhysicalPins() async {
@@ -445,27 +422,113 @@ class _PinMappingState extends State<PinMapping> {
                             shrinkWrap: true,
                             children: mappedPins
                                 .map((Pin mappedPin) => ListTile(
-                                      title: Text(mappedPin.namedPin),
+                                      title: Text.rich(
+                                        TextSpan(
+                                            text: 'Pin Name:  ',
+                                            children: <InlineSpan>[
+                                              TextSpan(
+                                                text: "' " +
+                                                    mappedPin.namedPin +
+                                                    " '",
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                            ]),
+                                      ),
                                       subtitle: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
                                         children: [
-                                          Text("Pin: "),
-                                          Text(
-                                            mappedPin.pin,
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold),
+                                          Flexible(
+                                            flex: 5,
+                                            child: Text.rich(
+                                              TextSpan(
+                                                  text: 'Pin:  ',
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                  children: <InlineSpan>[
+                                                    TextSpan(
+                                                      text: mappedPin.pin,
+                                                      style: TextStyle(
+                                                          fontWeight: FontWeight
+                                                              .normal),
+                                                    ),
+                                                  ]),
+                                            ),
                                           ),
-                                          Text("  Type: "),
-                                          Text(
-                                            mappedPin.type.toString(),
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold),
+                                          Flexible(
+                                            flex: 5,
+                                            child: Text.rich(
+                                              TextSpan(
+                                                  text: 'Type:  ',
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                  children: <InlineSpan>[
+                                                    TextSpan(
+                                                      text: mappedPin.type,
+                                                      style: TextStyle(
+                                                          fontWeight: FontWeight
+                                                              .normal),
+                                                    ),
+                                                  ]),
+                                            ),
                                           ),
-                                          Text("  In Use: "),
-                                          Text(
-                                            mappedPin.inUse.toString(),
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold),
-                                          ),
+                                          Flexible(
+                                              flex: 5,
+                                              child: Text("With Programs: ")),
+                                          mappedPin.usedPrograms.length > 1 &&
+                                                  mappedPin.usedPrograms
+                                                          .elementAt(0) !=
+                                                      null
+                                              ? Flexible(
+                                                  flex: 4,
+                                                  child: StatefulBuilder(
+                                                      builder: (BuildContext
+                                                              context,
+                                                          StateSetter
+                                                              dropDownState) {
+                                                    return Container(
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.grey[300],
+                                                      ),
+                                                      child: DropdownButton(
+                                                        isDense: true,
+                                                        isExpanded: true,
+                                                        items: mappedPin
+                                                            .usedPrograms
+                                                            .map((String
+                                                                    thing) =>
+                                                                DropdownMenuItem<
+                                                                        String>(
+                                                                    child: Text(
+                                                                        thing),
+                                                                    value:
+                                                                        thing))
+                                                            .toList(),
+                                                        onChanged:
+                                                            (String value) {
+                                                          dropDownState(() {});
+                                                        },
+                                                      ),
+                                                    );
+                                                  }),
+                                                )
+                                              : Flexible(
+                                                  flex: 4,
+                                                  child: Text(
+                                                      mappedPin.usedPrograms[
+                                                                  0] !=
+                                                              null
+                                                          ? mappedPin
+                                                              .usedPrograms[0]
+                                                          : "None",
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold)),
+                                                ),
                                         ],
                                       ),
                                       onTap: () => showDialog(
@@ -542,6 +605,7 @@ class _PinMappingState extends State<PinMapping> {
                                                                               }).catchError((Object error) {
                                                                                 _handleErrors(error);
                                                                               });
+                                                                              buttonSelected = 5;
                                                                               _refresh();
                                                                             },
                                                                             child:
