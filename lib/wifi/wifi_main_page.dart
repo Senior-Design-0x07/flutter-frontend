@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hobby_hub_ui/services/error/error_service.dart';
 import 'package:hobby_hub_ui/services/http/http_service.dart';
 
 class WifiPage extends StatefulWidget {
@@ -11,9 +12,74 @@ class WifiPage extends StatefulWidget {
 }
 
 class _WifiPageState extends State<WifiPage> {
-  String ssid = "";
-  String password = "";
-  bool scanBtn = false;
+  String _ssid = "";
+  String _password = "";
+  bool _scanBtn = false;
+
+  int _buttonSelected = 0;
+  bool _cmdSuccess = false;
+  bool _connection = true;
+  List<String> _connectionError;
+  String _httpServiceError;
+
+  Widget _showConnectionErrors() {
+    switch (_connectionError[0]) {
+      case 'Timeout':
+        return HHError(
+            title: _connectionError[0] + " Exception",
+            message: "Can't Connect",
+            type: 0);
+      default:
+        return HHError(
+            title: "Exception",
+            message: "A Connection Error Has Ocurred",
+            type: 0);
+    }
+  }
+
+  Widget _showHttpServiceErrors() {
+    switch (_httpServiceError.split(":")[0]) {
+      case 'Exception': //Generic Exceptions from HTTP_SERVICE
+        return HHError(
+            title: _httpServiceError.split(":")[0],
+            message: _httpServiceError.split("Exception: ")[1],
+            type: 0);
+      default:
+        return HHError(
+            title: "Exception", message: "An Error Has Ocurred", type: 0);
+    }
+  }
+
+  Widget _showButtonErrors() {
+    switch (_buttonSelected) {
+      case 1: // Scan 
+        return HHError(
+            title: 'Scan Networks', message: 'Scan Networks Error', type: 1);
+      case 2: // Connect
+        return HHError(
+            title: 'Connect to Network',
+            message: 'Could Not Connect',
+            type: 1);
+      case 3: // Clear Saved
+        return HHError(
+            title: 'Clear Network',
+            message: 'Clear Saved Network Error',
+            type: 1);
+      default:
+        return Text('Im Temporary in Button ERRORS!');
+    }
+  }
+
+  void _handleErrors(Object error) {
+    setState(() {
+      error.toString().split("Exception")[0] == "Timeout"
+          ? _connection = false
+          : _connection = true;
+      error.toString().split("Exception")[0] != ""
+          ? this._connectionError = error.toString().split("Exception")
+          : this._httpServiceError = error.toString();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,12 +94,16 @@ class _WifiPageState extends State<WifiPage> {
                 child: Column(
                   children: [
                     Container(
-                      height: 400,
+                      height: 365,
                       width: double.infinity,
-                      child: scanBtn
+                      child: _scanBtn
                           ? FutureBuilder(
-                              future: widget.http.getKnownNetworks(
-                                  restURL: 'api/wifi_request', cmd: 'scan'),
+                              future: widget.http
+                                  .getKnownNetworks(
+                                      restURL: 'api/wifi_request', cmd: 'scan')
+                                  .catchError((Object error) {
+                                _handleErrors(error);
+                              }),
                               builder: (BuildContext context,
                                   AsyncSnapshot snapshot) {
                                 if (snapshot.hasData) {
@@ -62,15 +132,31 @@ class _WifiPageState extends State<WifiPage> {
                                               ListTile(title: Text(network)))
                                           .toList());
                                 }
-                                return Column(
-                                  children: [
-                                    Text("Grabbing Data"),
-                                    SizedBox(
-                                      height: 15,
-                                    ),
-                                    Center(child: CircularProgressIndicator()),
-                                  ],
-                                );
+                                return (_httpServiceError == null &&
+                                        _connectionError == null)
+                                    ? Column(
+                                        children: [
+                                          Text("Grabbing Data"),
+                                          SizedBox(
+                                            height: 15,
+                                          ),
+                                          Center(
+                                              child:
+                                                  CircularProgressIndicator()),
+                                        ],
+                                      )
+                                    : Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.error_outline,
+                                            color: Colors.red,
+                                            size: 35.0,
+                                          ),
+                                          Text("An Error Has Ocurred!"),
+                                        ],
+                                      );
                               },
                             )
                           : new Container(
@@ -88,6 +174,14 @@ class _WifiPageState extends State<WifiPage> {
                   ],
                 ),
               ),
+              if (!_connection && _connectionError != null)
+                _showConnectionErrors(), // Connection Errors
+              if (_httpServiceError != null && _buttonSelected != 0)
+                _showHttpServiceErrors(),
+              if (!_cmdSuccess &&
+                  _buttonSelected != 0 &&
+                  _httpServiceError != null)
+                _showButtonErrors(), //Button Errors
               new Card(
                 child: Column(
                   children: [
@@ -95,7 +189,7 @@ class _WifiPageState extends State<WifiPage> {
                       margin: const EdgeInsets.all(30),
                       child: TextField(
                         onChanged: (String str) {
-                          ssid = str;
+                          _ssid = str;
                         },
                         obscureText: false,
                         decoration: InputDecoration(
@@ -106,7 +200,7 @@ class _WifiPageState extends State<WifiPage> {
                       margin: const EdgeInsets.all(30),
                       child: TextField(
                         onChanged: (String str) {
-                          password = str;
+                          _password = str;
                         },
                         obscureText: true,
                         decoration: InputDecoration(
@@ -123,8 +217,11 @@ class _WifiPageState extends State<WifiPage> {
                   new Container(
                     child: RaisedButton(
                       onPressed: () {
-                        scanBtn = true;
-                        setState(() {});
+                        _httpServiceError = null;
+                        setState(() {
+                          _scanBtn = true;
+                          _buttonSelected = 1;
+                        });
                       },
                       child: Text('Scan'),
                     ),
@@ -132,10 +229,18 @@ class _WifiPageState extends State<WifiPage> {
                   new Container(
                     child: RaisedButton(
                       onPressed: () async {
+                        _httpServiceError = null;
                         await widget.http.postSelectedNetwork(
                             restURL: 'api/wifi_request',
-                            postBody: {"ssid": ssid, "password": password});
-                        setState(() {});
+                            postBody: {
+                              "ssid": _ssid,
+                              "password": _password
+                            }).catchError((Object error) {
+                          _handleErrors(error);
+                        });
+                        setState(() {
+                          _buttonSelected = 2;
+                        });
                       },
                       child: Text('Connect'),
                     ),
@@ -143,8 +248,16 @@ class _WifiPageState extends State<WifiPage> {
                   new Container(
                     child: RaisedButton(
                       onPressed: () async {
-                        await widget.http.getClearNetwork(
-                            restURL: 'api/wifi_request', cmd: 'clear');
+                        _httpServiceError = null;
+                        await widget.http
+                            .getClearNetwork(
+                                restURL: 'api/wifi_request', cmd: 'clear')
+                            .catchError((Object error) {
+                          _handleErrors(error);
+                        });
+                        setState(() {
+                          _buttonSelected = 3;
+                        });
                       },
                       child: Text('Clear Saved Network'),
                     ),

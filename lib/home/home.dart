@@ -12,29 +12,30 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            height: 300,
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/BBboard_layout.png'),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              height: 300,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/BBboard_layout.png'),
+                ),
               ),
             ),
-          ),
-          SizedBox(
-            height: 50,
-          ),
-          LogMain(
-            http: widget.http,
-          )
-        ],
+            SizedBox(
+              height: 50,
+            ),
+            LogMain(
+              http: widget.http,
+            )
+          ],
+        ),
       ),
     );
   }

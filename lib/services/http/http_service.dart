@@ -170,7 +170,9 @@ class HttpService {
   */
   Future<String> getKnownNetworks(
       {@required var restURL, @required var cmd}) async {
-    Response res = await get("$_ipURL/$restURL/$cmd");
+    Response res = await get("$_ipURL/$restURL/$cmd")
+        .catchError((e) {})
+        .timeout(Duration(seconds: _timeoutDuration));
     if (res.statusCode == 200) {
       return res.body;
     } else {
@@ -180,24 +182,27 @@ class HttpService {
 
   Future<void> postSelectedNetwork(
       {@required var restURL, @required dynamic postBody}) async {
-    Response res = await post("$_ipURL/$restURL", body: postBody);
+    Response res = await post("$_ipURL/$restURL", body: postBody)
+        .catchError((e) {})
+        .timeout(Duration(seconds: _timeoutDuration));
     if (res.statusCode != 200) {
-      throw Exception('Failed to post: $postBody to $restURL');
+      throw Exception("Failed to connect to ' " + postBody["ssid"] + " '");
     }
   }
 
-  Future<String> getClearNetwork(
+  Future<void> getClearNetwork(
       {@required var restURL, @required var cmd}) async {
-    Response res = await get("$_ipURL/$restURL/$cmd");
-    if (res.statusCode == 200) {
-      return res.body;
-    } else {
-      throw Exception('Failed to clear networks');
+    Response res = await get("$_ipURL/$restURL/$cmd")
+        .catchError((e) {})
+        .timeout(Duration(seconds: _timeoutDuration));
+    if (res.statusCode != 200) {
+      throw Exception('Failed to clear saved networks');
     }
   }
 
   Future<bool> selectCurrentIP() async {
     Response res;
+    print(_ipURL);
     _ipURL != _usbURL
         ? res = await get("$_ipURL/api/wifi_request/ping")
             .catchError((e) {})

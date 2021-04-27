@@ -14,16 +14,15 @@ class ProgramManagerPage extends StatefulWidget {
 }
 
 class _ProgramManagerPageState extends State<ProgramManagerPage> {
-  List<Program> runningPrograms = List<Program>.empty(growable: true);
-  List<Program> pausedPrograms = List<Program>.empty(growable: true);
+  List<Program> _runningPrograms = List<Program>.empty(growable: true);
+  List<Program> _pausedPrograms = List<Program>.empty(growable: true);
   final GlobalKey<RefreshIndicatorState> _runningRefreshKey =
       new GlobalKey<RefreshIndicatorState>();
   final GlobalKey<RefreshIndicatorState> _pausedRefreshKey =
       new GlobalKey<RefreshIndicatorState>();
-  bool cmdSuccess = false;
-  bool connection = true;
-  List<String> connectionError;
-  String httpServiceError;
+  bool _connection = true;
+  List<String> _connectionError;
+  String _httpServiceError;
 
   @override
   void initState() {
@@ -37,53 +36,53 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
   }
 
   Widget _showConnectionErrors() {
-    switch (connectionError[0]) {
+    switch (_connectionError[0]) {
       case 'Timeout':
         return HHError(
-            title: connectionError[0] + " Exception",
+            title: _connectionError[0] + " Exception",
             message: "Can't Connect",
             type: 0);
       default:
         return HHError(
             title: "Exception",
-            message: "A connection error has ocurred",
+            message: "A Connection Error Has Ocurred",
             type: 0);
     }
   }
 
   Widget _showHttpServiceErrors() {
-    switch (httpServiceError.split(":")[0]) {
+    switch (_httpServiceError.split(":")[0]) {
       case 'Exception': //Generic Exceptions from HTTP_SERVICE
         return HHError(
-            title: httpServiceError.split(":")[0],
-            message: httpServiceError.split("Exception: ")[1],
+            title: _httpServiceError.split(":")[0],
+            message: _httpServiceError.split("Exception: ")[1],
             type: 0);
       default:
         return HHError(
-            title: "Exception", message: "An error has ocurred", type: 0);
+            title: "Exception", message: "An Error Has Ocurred", type: 0);
     }
   }
 
   void _handleErrors(Object error) {
     setState(() {
       error.toString().split("Exception")[0] == "Timeout"
-          ? connection = false
-          : connection = true;
+          ? _connection = false
+          : _connection = true;
       error.toString().split("Exception")[0] != ""
-          ? this.connectionError = error.toString().split("Exception")
-          : this.httpServiceError = error.toString();
+          ? this._connectionError = error.toString().split("Exception")
+          : this._httpServiceError = error.toString();
     });
   }
 
   // refresh indicator method - get running programs list for ListView widget
   Future<void> _refreshRunning() async {
-    httpServiceError = null;
+    _httpServiceError = null;
     return await widget.http
         .getProgramList(restURL: 'api/program_manager/running_programs')
-        .then((_pausedPrograms) {
-      connection = true;
-      if (_pausedPrograms.isNotEmpty) {
-        _parsePrograms("runningPrograms", _pausedPrograms);
+        .then((__runningPrograms) {
+      _connection = true;
+      if (__runningPrograms.isNotEmpty) {
+        _parsePrograms("runningPrograms", __runningPrograms);
         setState(() {});
       }
     }).catchError((Object error) {
@@ -93,13 +92,13 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
 
   // refresh indicator method - get paused programs list for ListView widget
   Future<void> _refreshPaused() async {
-    httpServiceError = null;
+    _httpServiceError = null;
     return await widget.http
         .getProgramList(restURL: 'api/program_manager/paused_programs')
-        .then((_pausedPrograms) {
-      connection = true;
-      if (_pausedPrograms.isNotEmpty) {
-        _parsePrograms("pausedPrograms", _pausedPrograms);
+        .then((__pausedPrograms) {
+      _connection = true;
+      if (__pausedPrograms.isNotEmpty) {
+        _parsePrograms("pausedPrograms", __pausedPrograms);
         setState(() {});
       }
     }).catchError((Object error) {
@@ -111,9 +110,9 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
   void _parsePrograms(String listName, String rawPrograms) {
     // clear current list
     if (listName == "runningPrograms") {
-      runningPrograms.clear();
+      _runningPrograms.clear();
     } else if (listName == "pausedPrograms") {
-      pausedPrograms.clear();
+      _pausedPrograms.clear();
     }
 
     if (listName == "runningPrograms" || listName == "pausedPrograms") {
@@ -137,9 +136,9 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
             processID: int.parse(programParts[1]));
 
         if (currentProgram != null && listName == "runningPrograms") {
-          runningPrograms.add(currentProgram);
+          _runningPrograms.add(currentProgram);
         } else if (currentProgram != null && listName == "pausedPrograms") {
-          pausedPrograms.add(currentProgram);
+          _pausedPrograms.add(currentProgram);
         }
       }
     }
@@ -152,9 +151,9 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(children: [
-            if (!connection && connectionError != null)
+            if (!_connection && _connectionError != null)
               _showConnectionErrors(), // Connection Errors
-            if (httpServiceError != null) _showHttpServiceErrors(),
+            if (_httpServiceError != null) _showHttpServiceErrors(),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -207,9 +206,9 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                       Container(
                         height: 225,
                         width: double.infinity,
-                        child: runningPrograms.isNotEmpty
+                        child: _runningPrograms.isNotEmpty
                             ? ListView(
-                                children: runningPrograms
+                                children: _runningPrograms
                                     .map(
                                       (Program currentProgram) => ListTile(
                                         title: Text(currentProgram.fileName),
@@ -373,9 +372,9 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                       Container(
                           height: 225,
                           width: double.infinity,
-                          child: pausedPrograms.isNotEmpty
+                          child: _pausedPrograms.isNotEmpty
                               ? ListView(
-                                  children: pausedPrograms
+                                  children: _pausedPrograms
                                       .map(
                                         (Program currentProgram) => ListTile(
                                           title: Text(currentProgram.fileName),
@@ -420,7 +419,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                         onPressed: () async {
                                                           Navigator.of(context)
                                                               .pop();
-                                                          this.httpServiceError =
+                                                          this._httpServiceError =
                                                               null;
                                                           await widget.http
                                                               .postProgramCommand(
@@ -445,7 +444,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                         onPressed: () async {
                                                           Navigator.of(context)
                                                               .pop();
-                                                          this.httpServiceError =
+                                                          this._httpServiceError =
                                                               null;
                                                           await widget.http
                                                               .postProgramCommand(
@@ -507,7 +506,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
               children: [
                 FlatButton(
                   onPressed: () async {
-                    this.httpServiceError = null;
+                    this._httpServiceError = null;
                     await widget.http.postProgramCommand(
                         restURL: 'api/program_manager/stop_ALLprograms',
                         postBody: {
@@ -522,7 +521,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                 ),
                 FlatButton(
                   onPressed: () async {
-                    this.httpServiceError = null;
+                    this._httpServiceError = null;
                     await widget.http.postProgramCommand(
                         restURL: 'api/program_manager/restart_ALLprograms',
                         postBody: {

@@ -19,7 +19,7 @@ class _PinMappingState extends State<PinMapping> {
   TextEditingController _textFieldController = TextEditingController();
 
   final List<String> _pinOptions = ["GPIO", "PWM", "I2C", "ANALOG", "SPECIAL"];
-  List<Map<String, String>> tempStorage = [];
+  List<Map<String, String>> _tempStorage = [];
   Map<String, List<String>> _physicalPinOptions = {
     "GPIO": List<String>.empty(growable: true),
     "PWM": List<String>.empty(growable: true),
@@ -27,52 +27,52 @@ class _PinMappingState extends State<PinMapping> {
     "ANALOG": List<String>.empty(growable: true),
     "SPECIAL": List<String>.empty(growable: true)
   };
-  List<Pin> mappedPins = [];
+  List<Pin> _mappedPins = [];
   String _pinType;
-  Pin selectedPin;
+  Pin _selectedPin;
   String _newPhysicalPin = "";
-  String pinNameValue = "";
-  int buttonSelected = 0;
-  bool cmdSuccess = false;
-  bool connection = true;
-  List<String> connectionError;
-  String httpServiceError;
+  String _pinNameValue = "";
+  int _buttonSelected = 0;
+  bool _cmdSuccess = false;
+  bool _connection = true;
+  List<String> _connectionError;
+  String _httpServiceError;
 
   Widget _showConnectionErrors() {
-    switch (connectionError[0]) {
+    switch (_connectionError[0]) {
       case 'Timeout':
         return HHError(
-            title: connectionError[0] + " Exception",
+            title: _connectionError[0] + " Exception",
             message: "Can't Connect",
             type: 0);
       default:
         return HHError(
             title: "Exception",
-            message: "A connection error has ocurred",
+            message: "A Connection Error Has Ocurred",
             type: 0);
     }
   }
 
   Widget _showHttpServiceErrors() {
-    switch (httpServiceError.split(":")[0]) {
+    switch (_httpServiceError.split(":")[0]) {
       case 'Exception': //Generic Exceptions from HTTP_SERVICE
         return HHError(
-            title: httpServiceError.split(":")[0],
-            message: httpServiceError.split("Exception: ")[1],
+            title: _httpServiceError.split(":")[0],
+            message: _httpServiceError.split("Exception: ")[1],
             type: 0);
       default:
         return HHError(
-            title: "Exception", message: "An error has ocurred", type: 0);
+            title: "Exception", message: "An Error Has Ocurred", type: 0);
     }
   }
 
   Widget _showButtonErrors() {
-    switch (buttonSelected) {
+    switch (_buttonSelected) {
       case 1: // Add Pin
         return HHError(title: 'Add Pin', message: 'Add Pin Error', type: 1);
       case 2: // Find Pin
         return HHError(
-            title: 'Found Pin', message: 'Could not find pin', type: 1);
+            title: 'Found Pin', message: 'Could Not Find Pin', type: 1);
       case 3: // Clear Unused
         return HHError(
             title: 'Clear Unused', message: 'Clear Unused Pins Error', type: 1);
@@ -90,11 +90,11 @@ class _PinMappingState extends State<PinMapping> {
   void _handleErrors(Object error) {
     setState(() {
       error.toString().split("Exception")[0] == "Timeout"
-          ? connection = false
-          : connection = true;
+          ? _connection = false
+          : _connection = true;
       error.toString().split("Exception")[0] != ""
-          ? this.connectionError = error.toString().split("Exception")
-          : this.httpServiceError = error.toString();
+          ? this._connectionError = error.toString().split("Exception")
+          : this._httpServiceError = error.toString();
     });
   }
 
@@ -132,11 +132,11 @@ class _PinMappingState extends State<PinMapping> {
   Future<void> _refresh() {
     return widget.http
         .getPinList(restURL: 'api/pin_manager/grab_used_pins')
-        .then((_mappedPins) {
-      connection = true;
-      if (_mappedPins.isNotEmpty || buttonSelected == 4)
+        .then((__mappedPins) {
+      _connection = true;
+      if (__mappedPins.isNotEmpty || _buttonSelected == 4)
         setState(() {
-          mappedPins = _mappedPins;
+          _mappedPins = __mappedPins;
         });
     }).catchError((Object error) {
       _handleErrors(error);
@@ -144,8 +144,8 @@ class _PinMappingState extends State<PinMapping> {
   }
 
   void _arrangePhysicalPins() {
-    for (var i = 0; i < tempStorage.length; i++) {
-      tempStorage[i].forEach((pinType, pinName) {
+    for (var i = 0; i < _tempStorage.length; i++) {
+      _tempStorage[i].forEach((pinType, pinName) {
         _physicalPinOptions[pinType].add(pinName);
       });
     }
@@ -153,7 +153,7 @@ class _PinMappingState extends State<PinMapping> {
 
   void _getPhysicalPins() async {
     if (_physicalPinOptions != {})
-      tempStorage = await widget.http
+      _tempStorage = await widget.http
           .getPhysicalPins(restURL: 'api/pin_manager/grab_physical_pins')
           .catchError((Object error) {
         _handleErrors(error);
@@ -175,11 +175,11 @@ class _PinMappingState extends State<PinMapping> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          if (!connection && connectionError != null)
+          if (!_connection && _connectionError != null)
             _showConnectionErrors(), // Connection Errors
-          if (httpServiceError != null && buttonSelected != 0)
+          if (_httpServiceError != null && _buttonSelected != 0)
             _showHttpServiceErrors(),
-          if (!cmdSuccess && buttonSelected != 0 && httpServiceError != null)
+          if (!_cmdSuccess && _buttonSelected != 0 && _httpServiceError != null)
             _showButtonErrors(), //Button Errors
           Card(
             color: Colors.grey[200],
@@ -205,7 +205,7 @@ class _PinMappingState extends State<PinMapping> {
                                     children: [
                                       TextField(
                                         onChanged: (value) {
-                                          pinNameValue = value;
+                                          _pinNameValue = value;
                                         },
                                         controller: _textFieldController,
                                         decoration: InputDecoration(
@@ -246,23 +246,23 @@ class _PinMappingState extends State<PinMapping> {
                                   FlatButton(
                                       onPressed: () async {
                                         Navigator.of(context).pop();
-                                        httpServiceError = null;
-                                        cmdSuccess =
+                                        _httpServiceError = null;
+                                        _cmdSuccess =
                                             await widget.http.requestNewPin(
                                           restURL:
                                               'api/pin_manager/request_pin',
                                           postBody: {
-                                            "pin_name": pinNameValue,
+                                            "pin_name": _pinNameValue,
                                             "pin_type": _selectPinType()
                                           },
                                         ).catchError((Object error) {
                                           _handleErrors(error);
                                         });
                                         //Get rid of null
-                                        cmdSuccess == null
-                                            ? cmdSuccess = false
-                                            : cmdSuccess = true;
-                                        buttonSelected = 1;
+                                        _cmdSuccess == null
+                                            ? _cmdSuccess = false
+                                            : _cmdSuccess = true;
+                                        _buttonSelected = 1;
                                         _refresh();
                                       },
                                       child: Text('Add')),
@@ -284,14 +284,14 @@ class _PinMappingState extends State<PinMapping> {
                   ),
                   tooltip: 'Find Pin',
                   onPressed: () {
-                    if (mappedPins.isNotEmpty) {
+                    if (_mappedPins.isNotEmpty) {
                       showDialog(
                           context: context,
                           builder: (_) => AlertDialog(
                                 title: Center(child: Text("Find Pin")),
                                 content: TextField(
                                   onChanged: (value) {
-                                    pinNameValue = value;
+                                    _pinNameValue = value;
                                   },
                                   controller: _textFieldController,
                                   decoration:
@@ -301,19 +301,19 @@ class _PinMappingState extends State<PinMapping> {
                                   FlatButton(
                                       onPressed: () async {
                                         Navigator.of(context).pop();
-                                        httpServiceError = null;
-                                        selectedPin = null;
-                                        selectedPin = await widget.http.getPin(
+                                        _httpServiceError = null;
+                                        _selectedPin = null;
+                                        _selectedPin = await widget.http.getPin(
                                             restURL: 'api/pin_manager/get_pin',
                                             postBody: {
-                                              "pin_name": pinNameValue
+                                              "pin_name": _pinNameValue
                                             }).catchError((Object error) {
                                           _handleErrors(error);
                                         });
-                                        selectedPin != null
-                                            ? cmdSuccess = true
-                                            : cmdSuccess = false;
-                                        buttonSelected = 2;
+                                        _selectedPin != null
+                                            ? _cmdSuccess = true
+                                            : _cmdSuccess = false;
+                                        _buttonSelected = 2;
                                         _refresh();
                                       },
                                       child: Text('Search')),
@@ -326,7 +326,7 @@ class _PinMappingState extends State<PinMapping> {
                               ),
                           barrierDismissible: true);
                     } else {
-                      buttonSelected = 0;
+                      _buttonSelected = 0;
                       showDialog(
                           context: context,
                           builder: (_) => _showNoPins(),
@@ -343,22 +343,22 @@ class _PinMappingState extends State<PinMapping> {
                     ),
                     tooltip: 'Clear Unused Pins',
                     onPressed: () async {
-                      if (mappedPins.isNotEmpty) {
-                        httpServiceError = null;
-                        cmdSuccess = await widget.http
+                      if (_mappedPins.isNotEmpty) {
+                        _httpServiceError = null;
+                        _cmdSuccess = await widget.http
                             .clearUnusedPins(
                                 restURL: 'api/pin_manager/clear_unused')
                             .catchError((Object error) {
                           _handleErrors(error);
                         });
                         //Get rid of null
-                        cmdSuccess == null
-                            ? cmdSuccess = false
-                            : cmdSuccess = true;
-                        buttonSelected = 3;
+                        _cmdSuccess == null
+                            ? _cmdSuccess = false
+                            : _cmdSuccess = true;
+                        _buttonSelected = 3;
                         _refresh();
                       } else {
-                        buttonSelected = 0;
+                        _buttonSelected = 0;
                         showDialog(
                             context: context,
                             builder: (_) => _showNoPins(),
@@ -374,18 +374,18 @@ class _PinMappingState extends State<PinMapping> {
                     ),
                     tooltip: 'Reset All Pins',
                     onPressed: () async {
-                      httpServiceError = null;
-                      cmdSuccess = await widget.http
+                      _httpServiceError = null;
+                      _cmdSuccess = await widget.http
                           .resetPinConfig(
                               restURL: 'api/pin_manager/reset_config')
                           .catchError((Object error) {
                         _handleErrors(error);
                       });
                       //Get rid of null
-                      cmdSuccess == null
-                          ? cmdSuccess = false
-                          : cmdSuccess = true;
-                      buttonSelected = 4;
+                      _cmdSuccess == null
+                          ? _cmdSuccess = false
+                          : _cmdSuccess = true;
+                      _buttonSelected = 4;
                       _refresh();
                     }),
                 SizedBox(
@@ -402,7 +402,7 @@ class _PinMappingState extends State<PinMapping> {
                       tooltip: 'Refresh',
                       onPressed: () {
                         _refreshIndicatorKey.currentState.show();
-                        buttonSelected = 0;
+                        _buttonSelected = 0;
                       }),
                 ),
               ],
@@ -416,11 +416,11 @@ class _PinMappingState extends State<PinMapping> {
                 color: Colors.grey[100],
                 child: Container(
                     height: 220,
-                    child: mappedPins.isNotEmpty
+                    child: _mappedPins.isNotEmpty
                         ? ListView(
                             scrollDirection: Axis.vertical,
                             shrinkWrap: true,
-                            children: mappedPins
+                            children: _mappedPins
                                 .map((Pin mappedPin) => ListTile(
                                       title: Text.rich(
                                         TextSpan(
@@ -599,13 +599,13 @@ class _PinMappingState extends State<PinMapping> {
                                                                             onPressed:
                                                                                 () async {
                                                                               Navigator.of(context).pop();
-                                                                              cmdSuccess = await widget.http.updatePin(restURL: 'api/pin_manager/update_pin', postBody: {
+                                                                              _cmdSuccess = await widget.http.updatePin(restURL: 'api/pin_manager/update_pin', postBody: {
                                                                                 'pin_name': mappedPin.namedPin,
                                                                                 'new_physical_pin': _newPhysicalPin
                                                                               }).catchError((Object error) {
                                                                                 _handleErrors(error);
                                                                               });
-                                                                              buttonSelected = 5;
+                                                                              _buttonSelected = 5;
                                                                               _refresh();
                                                                             },
                                                                             child:
@@ -644,10 +644,10 @@ class _PinMappingState extends State<PinMapping> {
           SizedBox(
             height: 10,
           ),
-          if (cmdSuccess)
+          if (_cmdSuccess)
             PinOutputResponse(
-              type: buttonSelected,
-              pin: selectedPin,
+              type: _buttonSelected,
+              pin: _selectedPin,
             ),
         ],
       ),
