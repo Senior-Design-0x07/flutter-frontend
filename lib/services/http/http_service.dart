@@ -202,7 +202,6 @@ class HttpService {
 
   Future<bool> selectCurrentIP() async {
     Response res;
-    print(_ipURL);
     _ipURL != _usbURL
         ? res = await get("$_ipURL/api/wifi_request/ping")
             .catchError((e) {})
@@ -241,13 +240,9 @@ class HttpService {
   Future<bool> pingBoard() async {
     if (_ipURL != _usbURL) {
       Response res = await get("$_ipURL/api/wifi_request/ping")
-          .catchError((e) {
-            print("hey1");
-          })
+          .catchError((e) {          })
           .timeout(Duration(seconds: _timeoutDuration))
-          .catchError((e) {
-            print("hey2");
-          });
+          .catchError((e) {          });
       return res != null
           ? res.statusCode == 200
               ? true
