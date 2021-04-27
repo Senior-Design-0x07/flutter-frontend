@@ -21,28 +21,43 @@ class PinOutputResponse extends StatelessWidget {
           children: [
             Center(child: Text('Found Pin Success')),
             SizedBox(
-              height: 10,
+              height: 5,
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Name: '),
+                Text(
+                  'Name: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 Text(pin.namedPin),
                 SizedBox(
                   width: 10,
                 ),
-                Text('Pin: '),
+                Text(
+                  'Pin: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 Text(pin.pin),
                 SizedBox(
                   width: 10,
                 ),
-                Text('Type: '),
-                Text(pin.type.toString()),
+                Text(
+                  'Type: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(pin.type),
                 SizedBox(
                   width: 10,
                 ),
-                Text('In Use: '),
-                Text(pin.inUse.toString()),
+                Text(
+                  'Programs: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Flexible(
+                    child: pin.usedPrograms.length > 1
+                        ? Text("' " + pin.usedPrograms[0] + "' and others...")
+                        : Text(pin.usedPrograms[0])),
               ],
             ),
           ],
@@ -51,8 +66,10 @@ class PinOutputResponse extends StatelessWidget {
         return Center(child: Text('Clear Unused Pin Success'));
       case 4: // Remove All Pins
         return Center(child: Text('Remove All Pins Success'));
+      case 5:
+        return Center(child: Text('Update Pin Success'));
       default:
-        return Text('Im TEMPORARY in OUTPUT RESPONSE cause something not "0-4" ');
+        return Center(child: Text('Success'));
     }
   }
 }

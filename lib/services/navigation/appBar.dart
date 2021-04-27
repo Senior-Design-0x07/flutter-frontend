@@ -14,7 +14,6 @@ class HHAppBar extends StatefulWidget {
 }
 
 class _HHAppBarState extends State<HHAppBar> {
-  bool _tempIP = false;
   bool _usingIP = false;
   bool _connection = false;
   Timer _timer;
@@ -35,14 +34,13 @@ class _HHAppBarState extends State<HHAppBar> {
 
   void _selectIP() async {
     _connection = true;
-    _usingIP = false;
-    _tempIP = await widget.http.selectCurrentIP().catchError((Object error) {
+    // _usingIP = false;
+    _usingIP = await widget.http.selectCurrentIP().catchError((Object error) {
       _handleErrors();
     });
-    if (_tempIP != _usingIP && _tempIP != null) {
-      setState(() {
-        _usingIP = _tempIP;
-      });
+    _usingIP == null ? _usingIP = false : _usingIP = true;
+    if (_usingIP) {
+      setState(() {});
     }
   }
 
@@ -86,7 +84,7 @@ class _HHAppBarState extends State<HHAppBar> {
 
   @override
   Widget build(BuildContext context) {
-    _checkIfConnected(60);
+    _checkIfConnected(45);
     return AppBar(
       backgroundColor: Colors.green,
       elevation: 0,
