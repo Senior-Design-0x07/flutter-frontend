@@ -11,7 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 // https://flutter.dev/docs/cookbook/networking/fetch-data#2-make-a-network-request
 
 class HttpService {
-  final int _connectionAttempts = 5;
+  final int _connectionAttempts = 15;
   final int _timeoutDuration = 10;
   final String _usbURL = "http://192.168.7.2:5000";
   String _ipURL;
