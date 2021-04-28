@@ -5,15 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:hobby_hub_ui/models/log.dart';
 import 'package:hobby_hub_ui/models/pin.dart';
 import 'package:http/http.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // HELP with http related things:
 // https://flutter.dev/docs/cookbook/networking/fetch-data#2-make-a-network-request
 
 class HttpService {
+  final int _connectionAttempts = 5;
   final int _timeoutDuration = 10;
   final String _usbURL = "http://192.168.7.2:5000";
-  String _ipURL = "http://192.168.7.2:5000";
-  // String _ipURL = "http://192.168.0.66:5000";
+  String _ipURL;
 
   /*
       Pin Manager Http Requests
@@ -200,54 +201,35 @@ class HttpService {
     }
   }
 
-  Future<bool> selectCurrentIP() async {
-    Response res;
-    _ipURL != _usbURL
-        ? res = await get("$_ipURL/api/wifi_request/ping")
-            .catchError((e) {})
-            .timeout(Duration(seconds: _timeoutDuration))
-        : res = await get("$_usbURL/api/wifi_request/ping")
-            .catchError((e) {})
-            .timeout(Duration(seconds: _timeoutDuration));
-    if (res.statusCode == 200) {
-      _ipURL != _usbURL
-          ? json.decode(res.body) == true
-              ? res = await get("$_ipURL/api/wifi_request/get_ip")
-                  .catchError((e) {})
-                  .timeout(Duration(seconds: _timeoutDuration))
-              : _ipURL = _usbURL
-          : json.decode(res.body) == true
-              ? res = await get("$_usbURL/api/wifi_request/get_ip")
-                  .catchError((e) {})
-                  .timeout(Duration(seconds: _timeoutDuration))
-              : _ipURL = _usbURL;
-      if (res.statusCode == 200) {
-        var boardIp = json.decode(res.body);
-        boardIp != ""
-            ? _ipURL = 'http://' + boardIp + ':5000'
-            : _ipURL = _usbURL;
-        return true;
-      } else {
-        _ipURL = _usbURL;
-        return false;
-      }
-    } else {
-      _ipURL = _usbURL;
-      return false;
-    }
-  }
-
   Future<bool> pingBoard() async {
+    final prefs = await SharedPreferences.getInstance();
+    int attempts = prefs.getInt("attempts") ?? 0;
+    _ipURL = prefs.getString("ip") ?? _usbURL;
     if (_ipURL != _usbURL) {
       Response res = await get("$_ipURL/api/wifi_request/ping")
-          .catchError((e) {          })
+          .catchError((e) {})
           .timeout(Duration(seconds: _timeoutDuration))
-          .catchError((e) {          });
-      return res != null
-          ? res.statusCode == 200
-              ? true
-              : false
-          : false;
+          .catchError((e) {
+        if (attempts >= _connectionAttempts) {
+          prefs.setString('ip', null);
+          prefs.setInt('attempts', null);
+          _ipURL = _usbURL;
+          throw Exception("Reconnect board to PC : IP address marked invalid");
+        } else {
+          attempts++;
+          prefs.setInt("attempts", attempts);
+        }
+      });
+      if (res != null) {
+        if (res.statusCode == 200) {
+          prefs.setString('attempts', null);
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
     } else {
       Response res = await get("$_usbURL/api/wifi_request/ping")
           .catchError((e) {})
@@ -261,13 +243,81 @@ class HttpService {
     }
   }
 
+  Future<bool> selectCurrentIP() async {
+    final prefs = await SharedPreferences.getInstance();
+    int attempts = prefs.getInt("attempts") ?? 0;
+    Response res;
+    _ipURL = prefs.getString("ip") ?? _usbURL;
+    _ipURL != _usbURL
+        ? res = await get("$_ipURL/api/wifi_request/ping")
+            .catchError((e) {})
+            .timeout(Duration(seconds: _timeoutDuration))
+            .catchError((e) {
+            attempts++;
+            prefs.setInt("attempts", attempts);
+          })
+        : res = await get("$_usbURL/api/wifi_request/ping")
+            .catchError((e) {})
+            .timeout(Duration(seconds: _timeoutDuration))
+            .catchError((e) {});
+    if (res != null && res.statusCode == 200) {
+      _ipURL != _usbURL
+          ? json.decode(res.body) == true
+              ? res = await get("$_ipURL/api/wifi_request/get_ip")
+                  .catchError((e) {})
+                  .timeout(Duration(seconds: _timeoutDuration))
+                  .catchError((e) {
+                  attempts++;
+                  prefs.setInt("attempts", attempts);
+                })
+              : _ipURL = _usbURL
+          : json.decode(res.body) == true
+              ? res = await get("$_usbURL/api/wifi_request/get_ip")
+                  .catchError((e) {})
+                  .timeout(Duration(seconds: _timeoutDuration))
+                  .catchError((e) {})
+              : _ipURL = _usbURL;
+      if (res != null && res.statusCode == 200) {
+        final boardIp = json.decode(res.body);
+        boardIp != ""
+            ? _ipURL = 'http://' + boardIp + ':5000'
+            : _ipURL = _usbURL;
+        prefs.setString('ip', _ipURL != _usbURL ? _ipURL : null);
+        prefs.setString('attempts', null);
+        return true;
+      } else {
+        if (attempts >= _connectionAttempts) {
+          prefs.setString('ip', null);
+          prefs.setString('attempts', null);
+          _ipURL = _usbURL;
+          throw Exception("Reconnect board to PC; IP address marked invalid");
+        } else {
+          attempts++;
+          prefs.setInt("attempts", attempts);
+        }
+        return false;
+      }
+    } else {
+      if (attempts >= _connectionAttempts) {
+        prefs.setString('ip', null);
+        prefs.setInt('attempts', null);
+        _ipURL = _usbURL;
+        throw Exception("Reconnect board to PC; IP address marked invalid");
+      } else {
+        attempts++;
+        prefs.setInt("attempts", attempts);
+      }
+      return false;
+    }
+  }
+
   /*
       Logging Http Requests
   */
   Future<List<Log>> getBackendLog({@required var restURL}) async {
     Response res = await get("$_ipURL/$restURL")
         .catchError((e) {})
-        .timeout(Duration(seconds: 5));
+        .timeout(Duration(seconds: _timeoutDuration));
     if (res.statusCode == 200) {
       List<Log> logData = [];
       var body = jsonDecode(res.body);
@@ -281,7 +331,7 @@ class HttpService {
   Future<bool> clearBackendLog({@required var restURL}) async {
     Response res = await get("$_ipURL/$restURL")
         .catchError((e) {})
-        .timeout(Duration(seconds: 5));
+        .timeout(Duration(seconds: _timeoutDuration));
     if (res.statusCode == 200) {
       return jsonDecode(res.body) == true ? true : false;
     } else {

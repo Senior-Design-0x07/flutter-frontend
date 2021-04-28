@@ -83,7 +83,7 @@ class _NavigationControllerState extends State<NavigationController> {
             },
           ),
           ListTile(
-            title: Text('Connect to WiFi'),
+            title: Text('WiFi'),
             onTap: () {
               Navigator.pop(context);
               setState(() => NavigationController.selectedIndex = 1);
@@ -110,7 +110,7 @@ class _NavigationControllerState extends State<NavigationController> {
 
   Widget _appBar(int selectedIndex) {
     return PreferredSize(
-        preferredSize: const Size.fromHeight(60),
+        preferredSize: const Size.fromHeight(80),
         child: HHAppBar(
             title: _selectTitle(selectedIndex),
             http: http,
