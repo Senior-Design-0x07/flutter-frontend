@@ -80,10 +80,13 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
     await widget.http
         .getProgramList(restURL: 'api/program_manager/running_programs')
         .then((__runningPrograms) {
-      _connection = true;
-      if (__runningPrograms.isNotEmpty) {
-        _parsePrograms("runningPrograms", __runningPrograms);
+      if (__runningPrograms.isNotEmpty || _runningPrograms.length > 0) {
+        _runningPrograms.clear();
+        _runningPrograms = __runningPrograms;
         setState(() {});
+      } else if (!_connection) {
+        setState(() {});
+        _connection = true;
       }
     }).catchError((Object error) {
       _handleErrors(error);
@@ -96,52 +99,17 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
     await widget.http
         .getProgramList(restURL: 'api/program_manager/paused_programs')
         .then((__pausedPrograms) {
-      _connection = true;
-      if (__pausedPrograms.isNotEmpty) {
-        _parsePrograms("pausedPrograms", __pausedPrograms);
+      if (__pausedPrograms.isNotEmpty || _pausedPrograms.length > 0) {
+        _pausedPrograms.clear();
+        _pausedPrograms = __pausedPrograms;
         setState(() {});
+      } else if (!_connection) {
+        setState(() {});
+        _connection = true;
       }
     }).catchError((Object error) {
       _handleErrors(error);
     });
-  }
-
-  // method for parsing text into Program objects for ListView mapping
-  void _parsePrograms(String listName, String rawPrograms) {
-    // clear current list
-    if (listName == "runningPrograms") {
-      _runningPrograms.clear();
-    } else if (listName == "pausedPrograms") {
-      _pausedPrograms.clear();
-    }
-
-    if (listName == "runningPrograms" || listName == "pausedPrograms") {
-      // convert list of running programs into List<String>
-      LineSplitter ls = new LineSplitter();
-      List<String> strPrograms = ls.convert(rawPrograms);
-
-      // convert list of Strings into Program objects
-      for (var i = 1; i < strPrograms.length - 1; i++) {
-        String programInfo = strPrograms[i];
-        List<String> programParts = programInfo.trim().split(' ');
-
-        // remove unnecessary characters (," )
-        programParts[0] = programParts[0].replaceAll('"', '');
-        programParts[1] = programParts[1].replaceAll('"', '');
-        programParts[1] = programParts[1].replaceAll(',', '');
-
-        Program currentProgram = new Program(
-            filePath: programParts[0],
-            fileName: programParts[0].split('/').last,
-            processID: int.parse(programParts[1]));
-
-        if (currentProgram != null && listName == "runningPrograms") {
-          _runningPrograms.add(currentProgram);
-        } else if (currentProgram != null && listName == "pausedPrograms") {
-          _pausedPrograms.add(currentProgram);
-        }
-      }
-    }
   }
 
   @override

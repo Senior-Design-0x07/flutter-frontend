@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hobby_hub_ui/models/log.dart';
 import 'package:hobby_hub_ui/models/pin.dart';
+import 'package:hobby_hub_ui/models/program.dart';
 import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,7 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class HttpService {
   final int _connectionAttempts = 15;
-  final int _timeoutDuration = 10;
+  final int _timeoutDuration = 15;
   final String _usbURL = "http://192.168.7.2:5000";
   String _ipURL;
 
@@ -145,12 +146,15 @@ class HttpService {
   /*
       Program Manager Requests
   */
-  Future<String> getProgramList({@required var restURL}) async {
+  Future<List<Program>> getProgramList({@required var restURL}) async {
     Response res = await get("$_ipURL/$restURL")
         .catchError((e) {})
         .timeout(Duration(seconds: _timeoutDuration));
     if (res.statusCode == 200) {
-      return res.body;
+      List<Program> programData = [];
+      var body = jsonDecode(res.body);
+      body.forEach((var k) => programData.add(Program.fromTxt(k)));
+      return programData;
     } else {
       throw Exception('Failed to grab indicated list');
     }
