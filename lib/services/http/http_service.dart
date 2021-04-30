@@ -162,7 +162,7 @@ class HttpService {
         .catchError((e) {})
         .timeout(Duration(seconds: _timeoutDuration));
     if (res.statusCode != 200) {
-      throw Exception('Failed to post: $postBody to $restURL');
+      throw Exception('Failed to update ' + postBody[0]);
     }
   }
 

@@ -56,7 +56,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
         return HHError(
             title: _httpServiceError.split(":")[0],
             message: _httpServiceError.split("Exception: ")[1],
-            type: 0);
+            type: 1);
       default:
         return HHError(
             title: "Exception", message: "An Error Has Ocurred", type: 0);
@@ -77,7 +77,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
   // refresh indicator method - get running programs list for ListView widget
   Future<void> _refreshRunning() async {
     _httpServiceError = null;
-    return await widget.http
+    await widget.http
         .getProgramList(restURL: 'api/program_manager/running_programs')
         .then((__runningPrograms) {
       _connection = true;
@@ -93,7 +93,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
   // refresh indicator method - get paused programs list for ListView widget
   Future<void> _refreshPaused() async {
     _httpServiceError = null;
-    return await widget.http
+    await widget.http
         .getProgramList(restURL: 'api/program_manager/paused_programs')
         .then((__pausedPrograms) {
       _connection = true;
@@ -251,6 +251,10 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                   actions: [
                                                     FlatButton(
                                                       onPressed: () async {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                        this._httpServiceError =
+                                                            null;
                                                         await widget.http
                                                             .postProgramCommand(
                                                                 restURL:
@@ -259,15 +263,20 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                               "program":
                                                                   currentProgram
                                                                       .fileName
-                                                            });
-                                                        setState(() {});
-                                                        Navigator.of(context)
-                                                            .pop();
+                                                            }).catchError((e) {
+                                                          _handleErrors(e);
+                                                        });
+                                                        _refreshRunning();
+                                                        _refreshPaused();
                                                       },
                                                       child: Text(("Pause")),
                                                     ),
                                                     FlatButton(
                                                       onPressed: () async {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                        this._httpServiceError =
+                                                            null;
                                                         await widget.http
                                                             .postProgramCommand(
                                                                 restURL:
@@ -276,10 +285,11 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                               "program":
                                                                   currentProgram
                                                                       .fileName
-                                                            });
-                                                        setState(() {});
-                                                        Navigator.of(context)
-                                                            .pop();
+                                                            }).catchError((e) {
+                                                          _handleErrors(e);
+                                                        });
+                                                        _refreshRunning();
+                                                        _refreshPaused();
                                                       },
                                                       child: Text(("Stop")),
                                                     ),
@@ -288,8 +298,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                         Navigator.of(context)
                                                             .pop();
                                                       },
-                                                      child: Text(
-                                                          ("Close Window")),
+                                                      child: Text(("Dismiss")),
                                                     )
                                                   ],
                                                 ),
@@ -435,7 +444,8 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                             _handleErrors(
                                                                 error);
                                                           });
-                                                          setState(() {});
+                                                          _refreshRunning();
+                                                          _refreshPaused();
                                                         },
                                                         child:
                                                             Text(("Continue")),
@@ -460,7 +470,8 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                             _handleErrors(
                                                                 error);
                                                           });
-                                                          setState(() {});
+                                                          _refreshRunning();
+                                                          _refreshPaused();
                                                         },
                                                         child: Text(("Stop")),
                                                       ),
@@ -469,8 +480,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                                                           Navigator.of(context)
                                                               .pop();
                                                         },
-                                                        child: Text(
-                                                            ("Close Window")),
+                                                        child: Text(("Dimiss")),
                                                       )
                                                     ],
                                                   ),
@@ -504,7 +514,7 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                FlatButton(
+                RaisedButton(
                   onPressed: () async {
                     this._httpServiceError = null;
                     await widget.http.postProgramCommand(
@@ -514,12 +524,13 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                         }).catchError((Object error) {
                       _handleErrors(error);
                     });
-                    setState(() {});
+                    _refreshRunning();
+                    _refreshPaused();
                   },
                   color: Colors.grey[300],
                   child: Text(("Stop ALL")),
                 ),
-                FlatButton(
+                RaisedButton(
                   onPressed: () async {
                     this._httpServiceError = null;
                     await widget.http.postProgramCommand(
@@ -529,7 +540,8 @@ class _ProgramManagerPageState extends State<ProgramManagerPage> {
                         }).catchError((Object error) {
                       _handleErrors(error);
                     });
-                    setState(() {});
+                    _refreshRunning();
+                    _refreshPaused();
                   },
                   color: Colors.grey[300],
                   child: Text(("Restart ALL")),
